@@ -1,0 +1,14 @@
+import 'package:flutter/material.dart';
+import 'package:lamaa/theme/colorScheme.dart';
+import 'package:lamaa/theme/textStyle.dart';
+
+final elevatedButtonThemeLight = ElevatedButtonThemeData(
+  style: ElevatedButton.styleFrom(
+    backgroundColor: AppColors.lightColorScheme.primary,
+    foregroundColor: Colors.white,
+    textStyle: AppTextStyles.lightTextTheme.titleMedium,
+    minimumSize: const Size(double.infinity, 52),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    elevation: 2,
+  ),
+);
