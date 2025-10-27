@@ -4,11 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 class RoleButton extends StatelessWidget{
 
   const RoleButton({
-  required this.onRole,
+    required this.onRole,
     required this.roleImagePath,
     required this.roleTitle,
     required this.roleSubTitle,
-  super.key});
+    super.key});
 
   final void Function() onRole;
   final String roleImagePath;
