@@ -4,13 +4,13 @@ import 'package:google_fonts/google_fonts.dart';
 class RoleButton extends StatelessWidget{
 
   const RoleButton({
-    required this.onRole,
+    required this.onPressed,
     required this.roleImagePath,
     required this.roleTitle,
     required this.roleSubTitle,
     super.key});
 
-  final void Function() onRole;
+  final VoidCallback onPressed;
   final String roleImagePath;
   final String roleTitle;
   final String roleSubTitle;
@@ -18,7 +18,7 @@ class RoleButton extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xFFD2EDEF),
         elevation: 10,
@@ -64,3 +64,4 @@ class RoleButton extends StatelessWidget{
     );
   }
 }
+
