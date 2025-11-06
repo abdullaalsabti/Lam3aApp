@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/theme/widgets/button.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lamaa/providers/providers.dart';
 
-class SignupClient extends StatefulWidget {
+
+class SignupClient extends ConsumerStatefulWidget {
   const SignupClient({super.key});
 
   @override
-  State<SignupClient> createState() => _LoginClient();
+  ConsumerState<SignupClient> createState() => _LoginClient();
 }
 
-class _LoginClient extends State<SignupClient> {
+class _LoginClient extends ConsumerState<SignupClient> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   bool _obscureText = true;
   final FocusNode _focusNode = FocusNode();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -22,14 +27,21 @@ class _LoginClient extends State<SignupClient> {
     });
   }
 
+  void showEmail(WidgetRef ref){
+    final email = ref.read(signupProvider).email;
+
+    print('Email :$email');
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
     _focusNode.dispose();
+    emailController.dispose();
+    passwordController.dispose();
     super.dispose();
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -57,6 +69,7 @@ class _LoginClient extends State<SignupClient> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         TextFormField(
+                          controller: emailController,
                           decoration: InputDecoration(
                             hintText: 'Email',
                             hintStyle: GoogleFonts.poppins(
@@ -71,10 +84,13 @@ class _LoginClient extends State<SignupClient> {
                             return null;
                           },
                           style: GoogleFonts.poppins(fontSize: 15),
+                          keyboardType: TextInputType.emailAddress,
+                          onChanged: (value) => ref.read(signupProvider.notifier).state =
+                          ref.read(signupProvider).copyWith(email: value),
                         ),
                         SizedBox(height: 15),
-
                         TextFormField(
+                          controller: passwordController,
                           focusNode: _focusNode,
                           obscureText: _obscureText,
                           decoration: InputDecoration(
@@ -109,7 +125,7 @@ class _LoginClient extends State<SignupClient> {
                           style: GoogleFonts.poppins(fontSize: 15),
                         ),
                         SizedBox(height: 20),
-                        Button(btnText: 'Sign Up'),
+                        Button(onTap: () => showEmail(ref) ,btnText: 'Sign Up'),
                         SizedBox(height: 30),
                         Row(
                           children: [

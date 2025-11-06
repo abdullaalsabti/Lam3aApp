@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class Button extends StatelessWidget {
-  const Button({required this.btnText, super.key});
+  const Button({required this.onTap ,required this.btnText, super.key});
 
   final String btnText;
+  final void Function() onTap;
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {},
+      onPressed: onTap,
       style: ElevatedButton.styleFrom(
         backgroundColor: Color(0xFF23918C),
         elevation: 5,
