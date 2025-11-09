@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:lamaa/theme/widgets/button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/providers/providers.dart';
 
+import '../widgets/button.dart';
 
 class SignupClient extends ConsumerStatefulWidget {
   const SignupClient({super.key});
@@ -27,7 +27,7 @@ class _LoginClient extends ConsumerState<SignupClient> {
     });
   }
 
-  void showEmail(WidgetRef ref){
+  void showEmail(WidgetRef ref) {
     final email = ref.read(signupProvider).email;
 
     print('Email :$email');
@@ -44,6 +44,7 @@ class _LoginClient extends ConsumerState<SignupClient> {
 
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text("Signup")),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(bottom: 20),
@@ -85,8 +86,10 @@ class _LoginClient extends ConsumerState<SignupClient> {
                           },
                           style: GoogleFonts.poppins(fontSize: 15),
                           keyboardType: TextInputType.emailAddress,
-                          onChanged: (value) => ref.read(signupProvider.notifier).state =
-                          ref.read(signupProvider).copyWith(email: value),
+                          onChanged: (value) =>
+                              ref.read(signupProvider.notifier).state = ref
+                                  .read(signupProvider)
+                                  .copyWith(email: value),
                         ),
                         SizedBox(height: 15),
                         TextFormField(
@@ -97,18 +100,18 @@ class _LoginClient extends ConsumerState<SignupClient> {
                             hintText: 'Password',
                             suffixIcon: _focusNode.hasFocus
                                 ? IconButton(
-                              icon: Icon(
-                                _obscureText
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
-                                color: Colors.black,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscureText = !_obscureText;
-                                });
-                              },
-                            )
+                                    icon: Icon(
+                                      _obscureText
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
+                                      color: Colors.black,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureText = !_obscureText;
+                                      });
+                                    },
+                                  )
                                 : null,
                             border: InputBorder.none,
                             hintStyle: GoogleFonts.poppins(
@@ -125,7 +128,7 @@ class _LoginClient extends ConsumerState<SignupClient> {
                           style: GoogleFonts.poppins(fontSize: 15),
                         ),
                         SizedBox(height: 20),
-                        Button(onTap: () => showEmail(ref) ,btnText: 'Sign Up'),
+                        Button(onTap: () => showEmail(ref), btnText: 'Sign Up'),
                         SizedBox(height: 30),
                         Row(
                           children: [
@@ -185,12 +188,18 @@ class _LoginClient extends ConsumerState<SignupClient> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.pushReplacementNamed(context, '/login_page');
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/login_page',
+                                );
                               },
                               child: Text(
                                 'Log In',
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ],

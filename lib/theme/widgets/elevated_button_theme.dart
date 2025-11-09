@@ -4,7 +4,7 @@ import 'package:lamaa/theme/text_style.dart';
 
 final elevatedButtonThemeLight = ElevatedButtonThemeData(
   style: ElevatedButton.styleFrom(
-    backgroundColor: Color(0xFFD2EDEF),
+    backgroundColor: AppColors.lightColorScheme.primary,
     foregroundColor: Colors.white,
     elevation: 10,
     shadowColor: Colors.black,
