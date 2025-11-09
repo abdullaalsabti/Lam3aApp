@@ -1,19 +1,28 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:lamaa/providers/providers.dart';
 
 import '../widgets/button.dart';
 
-class LoginClient extends StatefulWidget {
+class LoginClient extends ConsumerStatefulWidget {
   const LoginClient({super.key});
 
   @override
-  State<LoginClient> createState() => _LoginClientState();
+  ConsumerState<LoginClient> createState() => _LoginClientState();
 }
 
-class _LoginClientState extends State<LoginClient> {
+class _LoginClientState extends ConsumerState<LoginClient> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FocusNode _passwordFocusNode = FocusNode();
+  bool _isLogin = true;
   bool _obscureText = true;
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
 
   @override
   void initState() {
@@ -25,6 +34,14 @@ class _LoginClientState extends State<LoginClient> {
   void dispose() {
     _passwordFocusNode.dispose();
     super.dispose();
+  }
+
+  void _toggleFormMode() {
+    setState(() {
+      _isLogin = !_isLogin;
+      emailController.value = TextEditingValue.empty;
+      passwordController.value = TextEditingValue.empty;
+    });
   }
 
   InputDecoration _inputDecoration(String hint, {Widget? suffixIcon}) {
@@ -45,10 +62,69 @@ class _LoginClientState extends State<LoginClient> {
 
   String? _validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'Please enter some text';
+    if (value.trim().length < 8) {
+      return 'Password must be at least 8 characters long';
+    }
     if (value.trim().length > 30) {
       return 'Password can\'t be longer than 30 characters';
     }
     return null;
+  }
+
+  void _submit() async {
+    print("submitted");
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // 1. Set the correct URL and body based on login/signup mode
+    final String baseUrl = dotenv.env['API_BASE_URL']!;
+    final String endpoint = _isLogin ? "api/Auth/login" : "api/Auth/register";
+    final url = Uri.http(baseUrl, endpoint);
+
+    final Map<String, dynamic> body = {
+      'email': emailController.text,
+      'password': passwordController.text,
+    };
+
+    // Only add the 'role' if signing up
+    if (!_isLogin) {
+      body['role'] = ref.read(signupProvider.notifier).state.role.index;
+    }
+
+    // 2. Perform the request in a single try/catch block
+    try {
+      var response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode(body),
+      );
+
+      // 3. Check for success (CRITICAL STEP)
+      if (response.statusCode == 200) {
+        // Success!
+        var responseBody = jsonDecode(response.body);
+        var token = responseBody['token'];
+        var refreshToken = responseBody['refreshToken'];
+
+        print("Success!");
+        print("Token: $token");
+        print("Refresh Token: $refreshToken");
+
+        // TODO: Save tokens and navigate to home screen
+      } else {
+        // Handle API errors (like "wrong password" or "email exists")
+        print("API Error: ${response.statusCode}");
+        print("Error Response: ${response.body}");
+
+        // TODO: Show an error message to the user
+      }
+    } catch (ex) {
+      // Handle network errors (like "Connection refused" or no internet)
+      print("Network Error: $ex");
+
+      // TODO: Show a network error message to the user
+    }
   }
 
   @override
@@ -79,6 +155,7 @@ class _LoginClientState extends State<LoginClient> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       TextFormField(
+                        controller: emailController,
                         decoration: _inputDecoration('Email'),
                         validator: _validateEmail,
                         style: GoogleFonts.poppins(fontSize: 15),
@@ -86,6 +163,7 @@ class _LoginClientState extends State<LoginClient> {
                       const SizedBox(height: 15),
 
                       TextFormField(
+                        controller: passwordController,
                         focusNode: _passwordFocusNode,
                         obscureText: _obscureText,
                         decoration: _inputDecoration(
@@ -109,16 +187,22 @@ class _LoginClientState extends State<LoginClient> {
                       ),
                       const SizedBox(height: 20),
 
-                      Button(onTap: () {}, btnText: 'Log In'),
+                      Button(
+                        onTap: _submit,
+                        btnText: _isLogin ? 'Log In' : "Sign Up",
+                      ),
                       const SizedBox(height: 30),
 
                       const _DividerWithText(text: 'OR'),
                       const SizedBox(height: 30),
 
-                      _GoogleLoginButton(),
+                      _GoogleLoginButton(isLogin: _isLogin),
                       const SizedBox(height: 20),
 
-                      _SignUpPrompt(),
+                      _SignUpPrompt(
+                        isLogin: _isLogin,
+                        toggleFormMode: _toggleFormMode,
+                      ),
                     ],
                   ),
                 ),
@@ -153,7 +237,9 @@ class _DividerWithText extends StatelessWidget {
 }
 
 class _GoogleLoginButton extends StatelessWidget {
-  const _GoogleLoginButton();
+  _GoogleLoginButton({required this.isLogin});
+
+  bool isLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -169,7 +255,10 @@ class _GoogleLoginButton extends StatelessWidget {
         children: [
           Image.asset('lib/assets/images/google.png', width: 40),
           const SizedBox(width: 15),
-          Text('Login with Google', style: GoogleFonts.poppins(fontSize: 18)),
+          Text(
+            isLogin ? 'Login with Google' : "Signup with Google",
+            style: GoogleFonts.poppins(fontSize: 18),
+          ),
         ],
       ),
     );
@@ -177,7 +266,11 @@ class _GoogleLoginButton extends StatelessWidget {
 }
 
 class _SignUpPrompt extends StatelessWidget {
-  const _SignUpPrompt();
+  _SignUpPrompt({required this.isLogin, required this.toggleFormMode});
+
+  void Function() toggleFormMode;
+
+  bool isLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -185,14 +278,14 @@ class _SignUpPrompt extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text(
-          'Don\'t have an account?',
+          isLogin ? 'Don\'t have an account?' : 'Already have an account?',
           style: GoogleFonts.poppins(fontSize: 18),
         ),
         TextButton(
-          onPressed: () =>
-              Navigator.pushReplacementNamed(context, '/signup_page'),
+          onPressed: toggleFormMode,
+
           child: Text(
-            'Sign Up',
+            isLogin ? 'Sign Up' : 'Log In',
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,

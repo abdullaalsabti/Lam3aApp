@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:lamaa/theme/app_theme.dart';
-import 'pages/first_page.dart';
-import 'pages/login_client.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lamaa/pages/signup_client.dart';
+import 'package:lamaa/theme/app_theme.dart';
 
-void main() {
+import 'pages/first_page.dart';
+import 'pages/login_client.dart';
+
+void main() async {
   // Add this to ensure Flutter bindings are initialized
+  await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const ProviderScope(child: MyApp()));

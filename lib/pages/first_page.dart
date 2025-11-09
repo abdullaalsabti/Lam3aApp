@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../enums/enums.dart';
+import '../providers/providers.dart';
 import '../widgets/role_button.dart';
 
-class FirstPage extends StatefulWidget {
+class FirstPage extends ConsumerStatefulWidget {
   const FirstPage({super.key});
 
   @override
-  State<FirstPage> createState() => _FirstPageState();
+  ConsumerState<FirstPage> createState() => _FirstPageState();
 }
 
-class _FirstPageState extends State<FirstPage> {
+class _FirstPageState extends ConsumerState<FirstPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,14 +45,24 @@ class _FirstPageState extends State<FirstPage> {
             image: 'lib/assets/images/car.png',
             title: 'Client',
             subtitle: 'I want to book a car service',
-            onPressed: () => Navigator.pushNamed(context, '/login_page'),
+            onPressed: () {
+              ref.read(signupProvider.notifier).state = ref
+                  .read(signupProvider)
+                  .copyWith(role: Role.client);
+              Navigator.pushNamed(context, '/login_page');
+            },
           ),
           const SizedBox(height: 20),
           AlignedRoleButton(
             image: 'lib/assets/images/construction-worker.png',
             title: 'Provider',
             subtitle: 'I offer car wash or detailing service',
-            onPressed: () {},
+            onPressed: () {
+              ref.read(signupProvider.notifier).state = ref
+                  .read(signupProvider)
+                  .copyWith(role: Role.provider);
+              Navigator.pushNamed(context, '/login_page');
+            },
           ),
         ],
       ),

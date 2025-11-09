@@ -1,15 +1,16 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:uuid/uuid.dart';
 //import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lamaa/enums/enums.dart';
+import 'package:uuid/uuid.dart';
 
 class SignUpData {
   final uuid = Uuid();
-  final String role, email, password, phone, fName, lName, dob, address, userId;
+  final String email, password, phone, fName, lName, dob, address, userId;
+  final Role role;
   final Gender gender;
   SignUpData({
     String? userId,
-    this.role = '',
+    this.role = Role.client,
     this.email = '',
     this.password = '',
     this.phone = '',
@@ -21,7 +22,7 @@ class SignUpData {
   }) : userId = userId ?? const Uuid().v4();
 
   SignUpData copyWith({
-    String? role,
+    Role? role,
     String? email,
     String? password,
     String? phone,
