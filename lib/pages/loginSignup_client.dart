@@ -111,6 +111,11 @@ class _LoginClientState extends ConsumerState<LoginClient> {
         print("Token: $token");
         print("Refresh Token: $refreshToken");
 
+        //will only push the new page to the stack if API call is committed
+        if (!_isLogin && mounted) {
+          Navigator.pushNamed(context, '/phone_signup');
+        }
+
         // TODO: Save tokens and navigate to home screen
       } else {
         // Handle API errors (like "wrong password" or "email exists")
@@ -283,7 +288,6 @@ class _SignUpPrompt extends StatelessWidget {
         ),
         TextButton(
           onPressed: toggleFormMode,
-
           child: Text(
             isLogin ? 'Sign Up' : 'Log In',
             style: GoogleFonts.poppins(

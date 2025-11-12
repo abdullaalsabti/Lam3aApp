@@ -1,16 +1,29 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lamaa/pages/signup_client.dart';
 import 'package:lamaa/theme/app_theme.dart';
+import 'package:lamaa/pages/phone_signup.dart';
+import 'package:lamaa/pages/extended_signup.dart';
 
 import 'pages/first_page.dart';
-import 'pages/login_client.dart';
+import 'pages/loginSignup_client.dart';
 
 void main() async {
-  // Add this to ensure Flutter bindings are initialized
-  await dotenv.load(fileName: ".env");
+  // Ensure bindings before any async platform operations or plugin initialization
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    final envFile = File('.env');
+    if (!envFile.existsSync()) {
+      debugPrint('.env not found at project root (pubspec.yaml location).');
+    } else {
+      await dotenv.load(fileName: '.env');
+      debugPrint('Loaded .env with ${dotenv.env.length} keys.');
+    }
+  } catch (e, st) {
+    debugPrint('Error loading .env: $e\n$st');
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -25,11 +38,12 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
 
-      initialRoute: '/first_page',
+      initialRoute: '/phone_signup',
       routes: {
         '/first_page': (context) => const FirstPage(),
         '/login_page': (context) => const LoginClient(),
-        '/signup_page': (context) => const SignupClient(),
+        '/phone_signup': (context) => const PhoneSignup(),
+        '/extended_signup': (context) => ExtendedSignUp(),
       },
     );
   }

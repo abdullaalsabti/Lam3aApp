@@ -5,7 +5,7 @@ import 'package:uuid/uuid.dart';
 
 class SignUpData {
   final uuid = Uuid();
-  final String email, password, phone, fName, lName, dob, address, userId;
+  final String email, password, phone, fName, lName, dob, addressBN, addressLandmark, userId;
   final Role role;
   final Gender gender;
   SignUpData({
@@ -17,7 +17,8 @@ class SignUpData {
     this.fName = '',
     this.lName = '',
     this.dob = '',
-    this.address = '',
+    this.addressBN = '',
+    this.addressLandmark = '',
     this.gender = Gender.male,
   }) : userId = userId ?? const Uuid().v4();
 
@@ -29,7 +30,8 @@ class SignUpData {
     String? fName,
     String? lName,
     String? dob,
-    String? address,
+    String? addressBn,
+    String? addressLandmark,
     Gender? gender,
   }) {
     return SignUpData(
@@ -40,8 +42,9 @@ class SignUpData {
       fName: fName ?? this.fName,
       lName: lName ?? this.lName,
       dob: dob ?? this.dob,
-      address: address ?? this.address,
-      gender: gender ?? Gender.male,
+      addressBN: addressBn ?? addressBN, // Corrected: use local parameter 'addressBn'
+      addressLandmark: addressLandmark ?? this.addressLandmark, // Corrected: use local parameter 'addressLandmark'
+      gender: gender ?? this.gender, // Corrected: use local parameter 'gender'
     );
   }
 }

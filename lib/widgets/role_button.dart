@@ -7,7 +7,7 @@ class AlignedRoleButton extends StatelessWidget {
   final String subtitle;
   final VoidCallback onPressed;
 
-  const AlignedRoleButton({
+  const AlignedRoleButton({super.key, 
     required this.image,
     required this.title,
     required this.subtitle,
