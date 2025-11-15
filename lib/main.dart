@@ -1,10 +1,11 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lamaa/theme/app_theme.dart';
-import 'package:lamaa/pages/phone_signup.dart';
 import 'package:lamaa/pages/extended_signup.dart';
+import 'package:lamaa/pages/phone_signup.dart';
+import 'package:lamaa/theme/app_theme.dart';
 
 import 'pages/first_page.dart';
 import 'pages/loginSignup_client.dart';
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
 
-      initialRoute: '/phone_signup',
+      initialRoute: '/extended_signup',
       routes: {
         '/first_page': (context) => const FirstPage(),
         '/login_page': (context) => const LoginClient(),
