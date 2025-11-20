@@ -1,0 +1,4 @@
+enum CarType{
+  sedan,
+  suv
+}

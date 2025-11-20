@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../enums/enums.dart';
-import '../providers/providers.dart';
+import '../enums/role.dart';
+import '../providers/sign_up_providers.dart';
 import '../widgets/role_button.dart';
 
 class FirstPage extends ConsumerStatefulWidget {

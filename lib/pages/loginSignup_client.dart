@@ -1,12 +1,10 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
-import 'package:lamaa/providers/providers.dart';
-
+import 'package:lamaa/providers/sign_up_providers.dart';
 import '../widgets/button.dart';
 
 class LoginClient extends ConsumerStatefulWidget {
@@ -72,6 +70,12 @@ class _LoginClientState extends ConsumerState<LoginClient> {
   }
 
   void _submit() async {
+
+    if (true){
+      Navigator.pushNamed(context, '/phone_signup');
+      return;
+    }
+
     print("submitted");
     if (!_formKey.currentState!.validate()) {
       return;
@@ -111,11 +115,11 @@ class _LoginClientState extends ConsumerState<LoginClient> {
         print("Token: $token");
         print("Refresh Token: $refreshToken");
 
-        //will only push the new page to the stack if API call is committed
-        if (!_isLogin && mounted) {
+        //will only push the new page to the stack if API is called
+        if (mounted) {
           Navigator.pushNamed(context, '/phone_signup');
         }
-
+        print('Nav');
         // TODO: Save tokens and navigate to home screen
       } else {
         // Handle API errors (like "wrong password" or "email exists")

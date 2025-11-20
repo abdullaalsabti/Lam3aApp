@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:lamaa/enums/enums.dart';
+import 'package:lamaa/enums/gender.dart';
 import 'package:lamaa/pages/address_bottom_sheet.dart';
-import 'package:lamaa/providers/providers.dart';
-
+import 'package:lamaa/providers/sign_up_providers.dart';
 import '../widgets/button.dart';
 
 class ExtendedSignUp extends ConsumerStatefulWidget {
@@ -144,7 +143,7 @@ class _PhoneSignUpState extends ConsumerState<ExtendedSignUp> {
                       ),
                       const SizedBox(height: 5),
                       DropdownButtonFormField<Gender>(
-                        value: signupState.gender,
+                        initialValue: signupState.gender,
                         decoration: InputDecoration(
                           contentPadding: const EdgeInsets.symmetric(
                             vertical: 15,
@@ -179,7 +178,7 @@ class _PhoneSignUpState extends ConsumerState<ExtendedSignUp> {
                           }
                         },
                         validator: (value) =>
-                            value == null ? 'Please select a gender' : null,
+                            value == null ? 'Please select a gender.dart' : null,
                       ),
 
                       const SizedBox(height: 16),
@@ -255,9 +254,10 @@ class _PhoneSignUpState extends ConsumerState<ExtendedSignUp> {
                 ),
                 child: SizedBox(
                   width: double.infinity,
-                  child: Button(btnText: 'Proceed', onTap: () {}),
+                  child: Button(btnText: 'Proceed', onTap: () { Navigator.pushNamed(context, '/empty_garage');}),
                 ),
               ),
+
             ],
           ),
         ),

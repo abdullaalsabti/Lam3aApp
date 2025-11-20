@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lamaa/providers/providers.dart';
+import 'package:lamaa/providers/sign_up_providers.dart';
 
 import '../widgets/button.dart';
 
@@ -43,6 +43,7 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
 
       final currentPhone = ref.read(signupProvider).phone;
       print("Phone number saved: $currentPhone");
+      Navigator.pushNamed(context, '/extended_signup');
     } else {
       print("Invalid phone number");
     }
