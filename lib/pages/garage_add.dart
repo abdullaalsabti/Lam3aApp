@@ -4,14 +4,19 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/enums/car_type.dart';
 import 'package:lamaa/models/car_brand.dart';
 import 'package:lamaa/models/car_model.dart';
-import 'package:lamaa/dummy_garage_json.dart';
 import 'package:lamaa/providers/car_provider.dart';
+import 'package:lamaa/providers/brands_provider.dart';
+import 'package:lamaa/providers/vehicles_provider.dart';
+import 'package:lamaa/models/vehicle.dart';
 import 'package:lamaa/widgets/button.dart';
 import 'package:lamaa/widgets/select_car_color.dart';
 import 'package:lamaa/enums/car_colors.dart';
+import 'package:lamaa/services/api_service.dart';
+import 'dart:convert';
 
 class GarageAdd extends ConsumerStatefulWidget {
-  const GarageAdd({super.key});
+  final Vehicle? vehicleToEdit; // For editing mode
+  const GarageAdd({super.key, this.vehicleToEdit});
 
   @override
   ConsumerState<GarageAdd> createState() => _GarageAddState();
@@ -23,25 +28,123 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
     {'image': 'lib/assets/images/suv_car.png', 'label': 'SUV'},
   ];
 
-  final brands = dummyJson.map((b) => CarBrand.fromJson(b)).toList();
+  final TextEditingController _plateController = TextEditingController();
+  String? _originalPlateNumber; // Store original plate number for editing
 
-  void addVehicleToGarage() {
+  @override
+  void initState() {
+    super.initState();
+    // If editing, populate fields with vehicle data
+    if (widget.vehicleToEdit != null) {
+      final vehicle = widget.vehicleToEdit!;
+      _plateController.text = vehicle.plateNumber;
+      _originalPlateNumber = vehicle.plateNumber;
+      // Note: We'll need to set brand/model/color/type from vehicle data
+      // This requires finding the brand/model by name, which we'll do after brands load
+    }
+  }
+
+  // Helper to map Frontend colors to Backend Enum strings
+  String _mapColorToBackend(CarColors color) {
+    switch (color) {
+      case CarColors.black: return "Black";
+      case CarColors.white: return "White";
+      case CarColors.silver: return "Silver";
+      case CarColors.blue: return "Blue";
+      case CarColors.navy: return "Blue"; 
+      case CarColors.petrol: return "Blue";
+      case CarColors.red: return "Red";
+      case CarColors.whine: return "Red";
+      case CarColors.orange: return "Red";
+      case CarColors.pink: return "Red";
+      case CarColors.grey: return "Gray"; // Note spelling: Gray vs Grey
+      case CarColors.green: return "Green";
+      default: return "Gray"; 
+    }
+  }
+  
+  String _mapTypeToBackend(CarType type) {
+    switch (type) {
+      case CarType.sedan: return "Sedan";
+      case CarType.suv: return "Suv";
+    }
+  }
+
+  void addVehicleToGarage() async {
     final carSelection = ref.read(carSelectionProvider);
-    // TODO: Implement logic to save the selected car to the garage
+    
     if (carSelection.selectedType != null &&
         carSelection.selectedBrand != null &&
         carSelection.selectedModel != null &&
-        carSelection.selectedColor != null) {
-      print("Vehicle added successfully:");
-      print("Type: ${carSelection.selectedType}");
-      print("Brand: ${carSelection.selectedBrand!.brand}");
-      print("Model: ${carSelection.selectedModel!.name}");
-      print("Color: ${carSelection.selectedColor}");
-      // Navigator.pop(context); // Example: navigate back after saving
+        carSelection.selectedColor != null &&
+        _plateController.text.isNotEmpty) {
+      
+      try {
+        final body = {
+          'plateNumber': _plateController.text,
+          'brandId': int.parse(carSelection.selectedBrand!.id), 
+          'modelId': int.parse(carSelection.selectedModel!.id),
+          'color': _mapColorToBackend(carSelection.selectedColor!),
+          'carType': _mapTypeToBackend(carSelection.selectedType!),
+        };
+
+        final bool isEditing = _originalPlateNumber != null;
+        final response = isEditing
+            ? await ApiService().putAuthenticated('api/client/Vehicle/$_originalPlateNumber', body)
+            : await ApiService().postAuthenticated('api/client/Vehicle/addVehicle', body);
+
+        if (response.statusCode == 200) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(isEditing ? 'Vehicle updated successfully!' : 'Vehicle added successfully!')),
+            );
+            // Refresh vehicles list
+            ref.invalidate(vehiclesProvider);
+            
+            // Navigate to garage page after adding/editing
+            if (isEditing) {
+              Navigator.pop(context); // Just go back if editing
+            } else {
+              // Navigate to garage page after adding new vehicle
+              Navigator.pushReplacementNamed(context, '/garage');
+            }
+          }
+        } else {
+          String errorMessage = 'Failed to ${isEditing ? 'update' : 'add'} vehicle';
+          try {
+            final errorBody = jsonDecode(response.body);
+            errorMessage = errorBody['message'] ?? 
+                          errorBody['error'] ?? 
+                          errorMessage;
+          } catch (e) {
+            // Use default message
+          }
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(errorMessage)),
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error connecting to server: $e')),
+          );
+        }
+      }
+
     } else {
-      // Handle validation error if fields are incomplete
-      print("Validation failed: Please complete all selections.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please complete all selections and plate number')),
+      );
     }
+  }
+
+  @override
+  void dispose() {
+    _plateController.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,6 +153,9 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
     final theme = Theme.of(context);
     final carSelection = ref.watch(carSelectionProvider);
     final notifier = ref.read(carSelectionProvider.notifier);
+    
+    // Watch brands from provider (fetched in background)
+    final brandsAsync = ref.watch(brandsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -79,7 +185,7 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
                     Container(
                       padding: const EdgeInsets.only(top: 34),
                       child: Text(
-                        'Add a vehicle',
+                        widget.vehicleToEdit != null ? 'Edit vehicle' : 'Add a vehicle',
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: Colors.black,
                           fontSize: 32,
@@ -193,22 +299,35 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
                           'Select Your Car Brand',
                           style: theme.textTheme.bodyLarge,
                         ),
-                        DropdownMenu<CarBrand>(
-                          enableFilter: true,
-                          enableSearch: true,
-                          initialSelection: carSelection.selectedBrand,
-                          onSelected: (CarBrand? value) {
-                            if (value != null) {
-                              notifier.selectBrand(value);
-                            }
-                          },
-                          width: MediaQuery.of(context).size.width - 32, // Adjust to fill screen
-                          dropdownMenuEntries: brands
-                              .map(
-                                (b) => DropdownMenuEntry(
-                                value: b, label: b.brand),
-                          )
-                              .toList(),
+                        brandsAsync.when(
+                          data: (brands) => DropdownMenu<CarBrand>(
+                            enableFilter: true,
+                            enableSearch: true,
+                            initialSelection: carSelection.selectedBrand,
+                            onSelected: (CarBrand? value) {
+                              if (value != null) {
+                                notifier.selectBrand(value);
+                              }
+                            },
+                            width: MediaQuery.of(context).size.width - 32,
+                            dropdownMenuEntries: brands
+                                .map(
+                                  (b) => DropdownMenuEntry(
+                                  value: b, label: b.brand),
+                            )
+                                .toList(),
+                          ),
+                          loading: () => const Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                          error: (error, stack) => Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(
+                              'Error loading brands: $error',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ),
                         SizedBox(height: 20),
                         Text(
@@ -220,7 +339,7 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
                           enableSearch: true,
                           key: ValueKey(carSelection.selectedBrand?.id),
                           initialSelection: carSelection.selectedModel,
-                          enabled: carSelection.selectedBrand != null,
+                          enabled: brandsAsync.hasValue && carSelection.selectedBrand != null,
                           onSelected: (CarModel? value) {
                             if (value != null) {
                               notifier.selectModel(value);
@@ -245,6 +364,7 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
                           width: MediaQuery.of(context).size.width - 32, // same width as DropdownMenu
                           height: 55, // adjust as needed
                           child: TextFormField(
+                            controller: _plateController,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(
@@ -300,16 +420,8 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
               width: double.infinity,
               child: Button(
-                btnText: 'Add to Garage',
-                onTap: ()
-                {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Added to Garage'),
-                      duration: Duration(seconds: 1),
-                    ),
-                  );
-                },
+                btnText: widget.vehicleToEdit != null ? 'Update Vehicle' : 'Add to Garage',
+                onTap: addVehicleToGarage,
               ),
             ),
           ],

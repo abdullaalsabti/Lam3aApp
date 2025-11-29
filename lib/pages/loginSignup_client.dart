@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:lamaa/providers/sign_up_providers.dart';
+import 'package:lamaa/providers/vehicles_provider.dart';
+import 'package:lamaa/services/api_service.dart';
 import '../widgets/button.dart';
 
 class LoginClient extends ConsumerStatefulWidget {
@@ -71,18 +72,12 @@ class _LoginClientState extends ConsumerState<LoginClient> {
 
   void _submit() async {
 
-    if (true){
-      Navigator.pushNamed(context, '/phone_signup');
-      return;
-    }
-
-    print("submitted");
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     // 1. Set the correct URL and body based on login/signup mode
-    final String baseUrl = dotenv.env['API_BASE_URL']!;
+    const String baseUrl = '192.168.1.11:5003';
     final String endpoint = _isLogin ? "api/Auth/login" : "api/Auth/register";
     final url = Uri.http(baseUrl, endpoint);
 
@@ -93,7 +88,12 @@ class _LoginClientState extends ConsumerState<LoginClient> {
 
     // Only add the 'role' if signing up
     if (!_isLogin) {
-      body['role'] = ref.read(signupProvider.notifier).state.role.index;
+      final signUpData = ref.read(signupProvider);
+      body['role'] = signUpData.role.index;
+      
+      // Save email and password to signup provider for later login
+      ref.read(signupProvider.notifier).updateEmail(emailController.text);
+      ref.read(signupProvider.notifier).updatePassword(passwordController.text);
     }
 
     // 2. Perform the request in a single try/catch block
@@ -108,31 +108,198 @@ class _LoginClientState extends ConsumerState<LoginClient> {
       if (response.statusCode == 200) {
         // Success!
         var responseBody = jsonDecode(response.body);
+        
+        if (_isLogin) {
+          // Login response has token and refreshToken
+          var token = responseBody['token'];
+          var refreshToken = responseBody['refreshToken']; // This is already a string
+
+          print("Login Success!");
+          
+          // Save tokens using ApiService
+          await ApiService().saveTokens(token, refreshToken);
+
+          // Clear cached data from previous user session
+          // Invalidate vehicles provider to ensure fresh data for new user
+          ref.invalidate(vehiclesProvider);
+          
+          // Reset signup provider to clear any previous signup data
+          ref.read(signupProvider.notifier).reset();
+
+          // After login, go directly to garage page
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/garage');
+          }
+        } else {
+          // Register response has message and userId (NO TOKEN)
+          var userId = responseBody['userId']?.toString() ?? '';
+          var message = responseBody['message'] ?? 'Registration successful';
+          
+          print("Registration Success! UserId: $userId");
+          
+          // Save userId to signup provider for later use
+          ref.read(signupProvider.notifier).updateUserId(userId);
+          
+          // Set a default phone number temporarily (phone page removed)
+          ref.read(signupProvider.notifier).updatePhone('+962700000000');
+          
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(message),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+            
+            // After signup, wait a moment for DB transaction to complete, then login
+            // (skipping phone verification page temporarily)
+            await Future.delayed(const Duration(milliseconds: 500));
+            _loginAfterSignup(context, ref);
+          }
+        }
+        print('Nav');
+      } else {
+        // Handle API errors (like "wrong password" or "email exists")
+        String errorMessage = 'An error occurred. Please try again.';
+        
+        try {
+          final errorBody = jsonDecode(response.body);
+          // Backend returns errors in format: { message: "..." } or { error: "..." }
+          errorMessage = errorBody['message'] ?? 
+                        errorBody['error'] ?? 
+                        errorBody['Message'] ??
+                        errorMessage;
+        } catch (e) {
+          // If response body is not JSON, use status code based message
+          if (response.statusCode == 401) {
+            errorMessage = 'Invalid email or password';
+          } else if (response.statusCode == 409) {
+            errorMessage = 'Email is already registered';
+          } else if (response.statusCode == 400) {
+            errorMessage = 'Invalid request. Please check your input.';
+          } else if (response.statusCode == 500) {
+            errorMessage = 'Server error. Please try again later.';
+          }
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+    } catch (ex) { 
+      // Handle network errors (like "Connection refused" or no internet)
+      String errorMessage = 'Network error. Please check your internet connection.';
+      
+      if (ex.toString().contains('Connection timed out')) {
+        errorMessage = 'Connection timed out. Please check if the server is running.';
+      } else if (ex.toString().contains('Failed host lookup')) {
+        errorMessage = 'Cannot reach server. Please check your network connection.';
+      } else if (ex.toString().contains('SocketException')) {
+        errorMessage = 'Network error. Please check your connection.';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _loginAfterSignup(BuildContext context, WidgetRef ref) async {
+    try {
+      final signupData = ref.read(signupProvider);
+      const String baseUrl = '192.168.1.11:5003';
+      final url = Uri.http(baseUrl, 'api/Auth/login');
+      
+      // Use email and password from signup provider (saved during registration)
+      final loginEmail = signupData.email;
+      final loginPassword = signupData.password;
+      
+      // Debug: Print credentials (remove in production)
+      print("Attempting login with email: $loginEmail");
+      
+      if (loginEmail.isEmpty || loginPassword.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: Email or password not saved. Please try again.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+        return;
+      }
+      
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'email': loginEmail,
+          'password': loginPassword,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var responseBody = jsonDecode(response.body);
         var token = responseBody['token'];
         var refreshToken = responseBody['refreshToken'];
 
-        print("Success!");
-        print("Token: $token");
-        print("Refresh Token: $refreshToken");
+        // Save tokens
+        await ApiService().saveTokens(token, refreshToken);
 
-        //will only push the new page to the stack if API is called
+        // Clear cached data from any previous session
+        ref.invalidate(vehiclesProvider);
+
         if (mounted) {
-          Navigator.pushNamed(context, '/phone_signup');
+          // Navigate directly to extended signup (skipping phone page)
+          Navigator.pushReplacementNamed(context, '/extended_signup');
         }
-        print('Nav');
-        // TODO: Save tokens and navigate to home screen
       } else {
-        // Handle API errors (like "wrong password" or "email exists")
-        print("API Error: ${response.statusCode}");
-        print("Error Response: ${response.body}");
-
-        // TODO: Show an error message to the user
+        String errorMessage = 'Failed to login after signup';
+        try {
+          final errorBody = jsonDecode(response.body);
+          errorMessage = errorBody['message'] ?? 
+                        errorBody['error'] ?? 
+                        errorBody['Message'] ?? 
+                        errorMessage;
+        } catch (e) {
+          errorMessage = 'API Error: ${response.statusCode}. Please try again.';
+        }
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
-    } catch (ex) {
-      // Handle network errors (like "Connection refused" or no internet)
-      print("Network Error: $ex");
-
-      // TODO: Show a network error message to the user
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Network Error: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 

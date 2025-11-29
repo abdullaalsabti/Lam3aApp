@@ -8,12 +8,19 @@ class CarBrand {
   CarBrand({required this.id, required this.brand, required this.models});
 
   factory CarBrand.fromJson(Map<String, dynamic> json) {
+    final modelsList = json['Models'] ?? json['models'];
+    List<CarModel> models = [];
+    
+    if (modelsList != null && modelsList is List) {
+      models = modelsList
+          .map<CarModel>((m) => CarModel.fromJson(m as Map<String, dynamic>))
+          .toList();
+    }
+    
     return CarBrand(
-      id: json['Id'],
-      brand: json['Brand'],
-      models: (json['models'] as List)
-          .map((m) => CarModel.fromJson(m))
-          .toList(),
+      id: json['Id']?.toString() ?? json['id']?.toString() ?? '',
+      brand: json['Name'] ?? json['Brand'] ?? json['name'] ?? '',
+      models: models,
     );
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void showAddressBottomSheet(BuildContext context) {
+void showAddressBottomSheet(BuildContext context, Function(String address) onAddressSaved) {
   final formkey = GlobalKey<FormState>();
   final TextEditingController houseController = TextEditingController();
   final TextEditingController landmarkController = TextEditingController();
@@ -51,11 +51,15 @@ void showAddressBottomSheet(BuildContext context) {
                 // Map placeholder
                 ClipRRect(
                   borderRadius: BorderRadius.circular(15),
-                  child: Image.asset(
-                    'assets/images/map_placeholder.png',
+                  child: Container(
                     height: 160,
                     width: double.infinity,
-                    fit: BoxFit.cover,
+                    color: Colors.grey[200],
+                    child: Icon(
+                      Icons.map,
+                      size: 60,
+                      color: Colors.grey[400],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -116,10 +120,17 @@ void showAddressBottomSheet(BuildContext context) {
                     ),
                     onPressed: () {
                       if (formkey.currentState!.validate()) {
-                        // You can access the values here
-                        String house = houseController.text;
-                        String landmark = landmarkController.text;
-
+                        // Build address string
+                        String house = houseController.text.trim();
+                        String landmark = landmarkController.text.trim();
+                        String address = house;
+                        if (landmark.isNotEmpty) {
+                          address += ', $landmark';
+                        }
+                        
+                        // Call callback to update address field
+                        onAddressSaved(address);
+                        
                         Navigator.pop(context);
                       }
                     },

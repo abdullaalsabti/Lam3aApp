@@ -26,6 +26,10 @@ class SignUpNotifier extends StateNotifier<SignUpData> {
     state = state.copyWith(role: role);
   }
 
+  void updateUserId(String userId) {
+    state = state.copyWith(userId: userId);
+  }
+
   void reset() {
     state = SignUpData.empty();
   }

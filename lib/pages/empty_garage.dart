@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lamaa/providers/brands_provider.dart';
 import 'package:lamaa/pages/garage_add.dart';
 
 class EmptyGarage extends ConsumerWidget {
-  const EmptyGarage({super.key});
+  final VoidCallback? onAdd;
+  const EmptyGarage({super.key, this.onAdd});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -11,7 +13,19 @@ class EmptyGarage extends ConsumerWidget {
     final scheme = Theme.of(context).colorScheme;
 
     void add(){
-      Navigator.pushNamed(context, '/garage_add');
+      if (onAdd != null) {
+        onAdd!();
+      } else {
+        // Pre-fetch brands in background before navigation
+        // This will start fetching immediately while navigation animation happens
+        ref.read(brandsProvider.future);
+        
+        // Navigate to garage_add page
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const GarageAdd()),
+        );
+      }
     }
 
     return Scaffold(

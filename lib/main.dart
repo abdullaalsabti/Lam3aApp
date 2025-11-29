@@ -10,21 +10,19 @@ import 'pages/first_page.dart';
 import 'pages/loginSignup_client.dart';
 import 'pages/empty_garage.dart';
 import 'pages/garage_add.dart';
+import 'pages/garage_page.dart';
 
 void main() async {
   // Ensure bindings before any async platform operations or plugin initialization
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    final envFile = File('.env');
-    if (!envFile.existsSync()) {
-      debugPrint('.env not found at project root (pubspec.yaml location).');
-    } else {
-      await dotenv.load(fileName: '.env');
-      debugPrint('Loaded .env with ${dotenv.env.length} keys.');
-    }
+    // Try loading .env file - it should be in the project root (same directory as pubspec.yaml)
+    await dotenv.load(fileName: '.env');
+    debugPrint('Loaded .env successfully. API_BASE_URL: ${dotenv.env['API_BASE_URL']}');
   } catch (e, st) {
-    debugPrint('Error loading .env: $e\n$st');
+    debugPrint('Warning: Could not load .env file: $e');
+    debugPrint('Using default API_BASE_URL: 192.168.1.11:5003');
   }
 
   runApp(const ProviderScope(child: MyApp()));
@@ -47,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/phone_signup': (context) => const PhoneSignup(),
         '/extended_signup': (context) => const ExtendedSignUp(),
         '/empty_garage': (context) => const EmptyGarage(),
+        '/garage': (context) => const GaragePage(),
         '/garage_add': (context) => const GarageAdd(),
       },
     );
