@@ -14,6 +14,10 @@ class SignUpData {
   final String addressLandmark;
   final Role role;
   final Gender gender;
+  final List<String> services;
+  final String servicePrice;
+  final String estServiceTime;
+  final String serviceDesc;
 
   const SignUpData({
     required this.userId,
@@ -27,6 +31,10 @@ class SignUpData {
     required this.addressBN,
     required this.addressLandmark,
     required this.gender,
+    required this.services,
+    required this.servicePrice,
+    required this.estServiceTime,
+    required this.serviceDesc,
   });
 
   factory SignUpData.empty() {
@@ -42,6 +50,10 @@ class SignUpData {
       addressBN: '',
       addressLandmark: '',
       gender: Gender.male,
+      services: [],
+      servicePrice: '',
+      estServiceTime: '',
+      serviceDesc: '',
     );
   }
 
@@ -57,6 +69,10 @@ class SignUpData {
     String? addressLandmark,
     Role? role,
     Gender? gender,
+    List<String>? services,
+    String? servicePrice,
+    String? estServiceTime,
+    String? serviceDesc,
   }) {
     return SignUpData(
       userId: userId ?? this.userId,
@@ -70,6 +86,10 @@ class SignUpData {
       addressLandmark: addressLandmark ?? this.addressLandmark,
       role: role ?? this.role,
       gender: gender ?? this.gender,
+      services: services ?? List.from(this.services),
+      servicePrice: servicePrice ?? this.servicePrice,
+      estServiceTime: estServiceTime ?? this.estServiceTime,
+      serviceDesc: serviceDesc ?? this.serviceDesc,
     );
   }
 }

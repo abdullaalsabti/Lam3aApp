@@ -1,7 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lamaa/pages/onboarding_availability.dart';
+import 'package:lamaa/pages/onboarding_services.dart';
 import 'package:lamaa/theme/app_theme.dart';
 //pages
 import 'pages/extended_signup.dart';
@@ -20,7 +21,7 @@ void main() async {
     // Try loading .env file - it should be in the project root (same directory as pubspec.yaml)
     await dotenv.load(fileName: '.env');
     debugPrint('Loaded .env successfully. API_BASE_URL: ${dotenv.env['API_BASE_URL']}');
-  } catch (e, st) {
+  } catch (e) {
     debugPrint('Warning: Could not load .env file: $e');
     debugPrint('Using default API_BASE_URL: 192.168.1.11:5003');
   }
@@ -38,7 +39,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
 
-      initialRoute: '/first_page',
+      initialRoute: '/onboarding_services',
       routes: {
         '/first_page': (context) => const FirstPage(),
         '/login_page': (context) => const LoginClient(),
@@ -47,6 +48,8 @@ class MyApp extends StatelessWidget {
         '/empty_garage': (context) => const EmptyGarage(),
         '/garage': (context) => const GaragePage(),
         '/garage_add': (context) => const GarageAdd(),
+        '/onboarding_services': (context) => const OnBoardingServices(),
+        '/onboarding_availability': (context) => const OnBoardingAvailability(),
       },
     );
   }
