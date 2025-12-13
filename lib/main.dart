@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lamaa/pages/onboarding_availability.dart';
+import 'package:lamaa/pages/onboarding_services.dart';
 import 'package:lamaa/theme/app_theme.dart';
 //pages
 import 'pages/extended_signup.dart';
@@ -47,7 +49,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
 
-      initialRoute: '/first_page',
+      initialRoute: '/onboarding_services',
       routes: {
         '/first_page': (context) => const FirstPage(),
         '/login_page': (context) => const LoginClient(),
