@@ -46,9 +46,7 @@ class _FirstPageState extends ConsumerState<FirstPage> {
             title: 'Client',
             subtitle: 'I want to book a car service',
             onPressed: () {
-              ref.read(signupProvider.notifier).state = ref
-                  .read(signupProvider)
-                  .copyWith(role: Role.client);
+              ref.read(signupProvider.notifier).updateRole(Role.client);
               Navigator.pushNamed(context, '/login_page');
             },
           ),
@@ -58,9 +56,7 @@ class _FirstPageState extends ConsumerState<FirstPage> {
             title: 'Provider',
             subtitle: 'I offer car wash or detailing service',
             onPressed: () {
-              ref.read(signupProvider.notifier).state = ref
-                  .read(signupProvider)
-                  .copyWith(role: Role.provider);
+              ref.read(signupProvider.notifier).updateRole(Role.provider);
               Navigator.pushNamed(context, '/login_page');
             },
           ),

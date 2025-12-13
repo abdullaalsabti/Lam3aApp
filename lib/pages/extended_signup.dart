@@ -132,10 +132,13 @@ class _PhoneSignUpState extends ConsumerState<ExtendedSignUp> {
         'address': {
           'street': 'Default Street', // Placeholder until Google Maps is implemented
           'buildingNumber': addressParts['buildingNumber'] ?? '0',
-          'landmark': addressParts['landmark'] ?? '',
+          'landmark': addressParts['landmark']?.toString().trim().isNotEmpty == true
+              ? addressParts['landmark']
+              : 'Amman',
           'coordinates': {
-            'latitude': 0.0,
-            'longitude': 0.0,
+            // Dummy Amman coordinates until Google Maps is implemented
+            'latitude': 31.9539,
+            'longitude': 35.9106,
           },
         },
       };
@@ -148,8 +151,8 @@ class _PhoneSignUpState extends ConsumerState<ExtendedSignUp> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile saved successfully!')),
           );
-          // Navigate to garage page
-          Navigator.pushReplacementNamed(context, '/garage');
+          // Navigate to client home page
+          Navigator.pushReplacementNamed(context, '/client_home');
         }
       } else {
         String errorMessage = 'Failed to save profile';

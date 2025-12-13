@@ -1,6 +1,3 @@
-import '../enums/car_type.dart';
-import '../enums/car_colors.dart';
-
 class Vehicle {
   final String plateNumber;
   final String model;
@@ -36,5 +33,6 @@ class Vehicle {
     };
   }
 }
+
 
 

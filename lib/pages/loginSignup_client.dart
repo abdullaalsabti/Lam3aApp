@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:lamaa/providers/sign_up_providers.dart';
 import 'package:lamaa/providers/vehicles_provider.dart';
 import 'package:lamaa/services/api_service.dart';
+import 'package:lamaa/enums/role.dart';
 import '../widgets/button.dart';
 
 class LoginClient extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class _LoginClientState extends ConsumerState<LoginClient> {
   final FocusNode _passwordFocusNode = FocusNode();
   bool _isLogin = true;
   bool _obscureText = true;
+  bool _isLoading = false;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
 
@@ -71,33 +73,41 @@ class _LoginClientState extends ConsumerState<LoginClient> {
   }
 
   void _submit() async {
-
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    // 1. Set the correct URL and body based on login/signup mode
-    const String baseUrl = '192.168.1.11:5003';
-    final String endpoint = _isLogin ? "api/Auth/login" : "api/Auth/register";
-    final url = Uri.http(baseUrl, endpoint);
-
-    final Map<String, dynamic> body = {
-      'email': emailController.text,
-      'password': passwordController.text,
-    };
-
-    // Only add the 'role' if signing up
-    if (!_isLogin) {
-      final signUpData = ref.read(signupProvider);
-      body['role'] = signUpData.role.index;
-      
-      // Save email and password to signup provider for later login
-      ref.read(signupProvider.notifier).updateEmail(emailController.text);
-      ref.read(signupProvider.notifier).updatePassword(passwordController.text);
+    // Prevent multiple clicks
+    if (_isLoading) {
+      return;
     }
 
-    // 2. Perform the request in a single try/catch block
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
+      // 1. Set the correct URL and body based on login/signup mode
+      const String baseUrl = '192.168.1.11:5003';
+      final String endpoint = _isLogin ? "api/Auth/login" : "api/Auth/register";
+      final url = Uri.http(baseUrl, endpoint);
+
+      final Map<String, dynamic> body = {
+        'email': emailController.text,
+        'password': passwordController.text,
+      };
+
+      // Only add the 'role' if signing up
+      if (!_isLogin) {
+        final signUpData = ref.read(signupProvider);
+        body['role'] = signUpData.role.index;
+        
+        // Save email and password to signup provider for later login
+        ref.read(signupProvider.notifier).updateEmail(emailController.text);
+        ref.read(signupProvider.notifier).updatePassword(passwordController.text);
+      }
+
+      // 2. Perform the request
       var response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
@@ -122,13 +132,19 @@ class _LoginClientState extends ConsumerState<LoginClient> {
           // Clear cached data from previous user session
           // Invalidate vehicles provider to ensure fresh data for new user
           ref.invalidate(vehiclesProvider);
-          
-          // Reset signup provider to clear any previous signup data
+  
+          // Preserve selected role (client/provider) then reset other signup fields
+          final selectedRole = ref.read(signupProvider).role;
           ref.read(signupProvider.notifier).reset();
+          ref.read(signupProvider.notifier).updateRole(selectedRole);
 
-          // After login, go directly to garage page
+          // After login, navigate based on selected role
           if (mounted) {
-            Navigator.pushReplacementNamed(context, '/garage');
+            if (selectedRole == Role.provider) {
+              Navigator.pushReplacementNamed(context, '/provider_available_requests');
+            } else {
+              Navigator.pushReplacementNamed(context, '/client_home');
+            }
           }
         } else {
           // Register response has message and userId (NO TOKEN)
@@ -215,10 +231,23 @@ class _LoginClientState extends ConsumerState<LoginClient> {
           ),
         );
       }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _loginAfterSignup(BuildContext context, WidgetRef ref) async {
+    // Set loading state for the login after signup
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
+
     try {
       final signupData = ref.read(signupProvider);
       const String baseUrl = '192.168.1.11:5003';
@@ -240,6 +269,9 @@ class _LoginClientState extends ConsumerState<LoginClient> {
               duration: Duration(seconds: 4),
             ),
           );
+          setState(() {
+            _isLoading = false;
+          });
         }
         return;
       }
@@ -265,8 +297,13 @@ class _LoginClientState extends ConsumerState<LoginClient> {
         ref.invalidate(vehiclesProvider);
 
         if (mounted) {
-          // Navigate directly to extended signup (skipping phone page)
-          Navigator.pushReplacementNamed(context, '/extended_signup');
+          // Navigate to correct extended signup based on selected role
+          final selectedRole = signupData.role;
+          if (selectedRole == Role.provider) {
+            Navigator.pushReplacementNamed(context, '/provider_extended_signup');
+          } else {
+            Navigator.pushReplacementNamed(context, '/extended_signup');
+          }
         }
       } else {
         String errorMessage = 'Failed to login after signup';
@@ -366,6 +403,7 @@ class _LoginClientState extends ConsumerState<LoginClient> {
                       Button(
                         onTap: _submit,
                         btnText: _isLogin ? 'Log In' : "Sign Up",
+                        isLoading: _isLoading,
                       ),
                       const SizedBox(height: 30),
 
@@ -413,9 +451,9 @@ class _DividerWithText extends StatelessWidget {
 }
 
 class _GoogleLoginButton extends StatelessWidget {
-  _GoogleLoginButton({required this.isLogin});
+  const _GoogleLoginButton({required this.isLogin});
 
-  bool isLogin;
+  final bool isLogin;
 
   @override
   Widget build(BuildContext context) {
@@ -442,11 +480,11 @@ class _GoogleLoginButton extends StatelessWidget {
 }
 
 class _SignUpPrompt extends StatelessWidget {
-  _SignUpPrompt({required this.isLogin, required this.toggleFormMode});
+  const _SignUpPrompt({required this.isLogin, required this.toggleFormMode});
 
-  void Function() toggleFormMode;
+  final void Function() toggleFormMode;
 
-  bool isLogin;
+  final bool isLogin;
 
   @override
   Widget build(BuildContext context) {
