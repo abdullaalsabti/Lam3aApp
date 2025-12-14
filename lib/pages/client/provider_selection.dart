@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
-import '../models/service_category.dart';
-import '../models/vehicle.dart';
-import '../models/available_provider.dart';
-import '../enums/payment_method.dart';
-import '../services/api_service.dart';
+import '../../models/service_category.dart';
+import '../../models/vehicle.dart';
+import '../../models/available_provider.dart';
+import '../../enums/payment_method.dart';
+import '../../services/api_service.dart';
 
 class ProviderSelectionPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> requestData;

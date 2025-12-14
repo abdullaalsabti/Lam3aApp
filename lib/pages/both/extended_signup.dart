@@ -4,19 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lamaa/enums/gender.dart';
-import 'package:lamaa/pages/address_bottom_sheet.dart';
+import 'package:lamaa/enums/role.dart';
+import 'package:lamaa/pages/client/garage_page.dart';
+import 'package:lamaa/widgets/address_bottom_sheet.dart';
 import 'package:lamaa/providers/sign_up_providers.dart';
 import 'package:lamaa/services/api_service.dart';
-import '../widgets/button.dart';
+import '../../widgets/button.dart';
 
-class ProviderExtendedSignUp extends ConsumerStatefulWidget {
-  const ProviderExtendedSignUp({super.key});
+class ExtendedSignup extends ConsumerStatefulWidget {
+  const ExtendedSignup({super.key});
 
   @override
-  ConsumerState<ProviderExtendedSignUp> createState() => _ProviderExtendedSignUpState();
+  ConsumerState<ExtendedSignup> createState() => _ExtendedSignupState();
 }
 
-class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp> {
+class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
   final formKey = GlobalKey<FormState>();
 
   late final TextEditingController fNameController = TextEditingController();
@@ -121,44 +123,62 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
         'address': {
           'street': 'Default Street',
           'buildingNumber': addressParts['buildingNumber'] ?? '0',
-          'landmark': addressParts['landmark']?.toString().trim().isNotEmpty == true
+          'landmark':
+              addressParts['landmark']?.toString().trim().isNotEmpty == true
               ? addressParts['landmark']
               : 'Amman',
-          'coordinates': {
-            'latitude': 31.9539,
-            'longitude': 35.9106,
-          },
+          'coordinates': {'latitude': 31.9539, 'longitude': 35.9106},
         },
       };
 
-      final response = await ApiService()
-          .putAuthenticated('api/provider/ProviderProfile/editProfile', body);
+      var response;
+      final userData = ref.read(signupProvider);
+
+      userData.role == Role.provider
+          ? response = await ApiService().putAuthenticated(
+              'api/provider/ProviderProfile/editProfile',
+              body,
+            )
+          : response = await ApiService().putAuthenticated(
+              'api/client/ClientProfile/editProfile',
+              body,
+            );
 
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile saved successfully!')),
           );
-          Navigator.pushReplacementNamed(context, '/provider_availability');
+          userData.role == Role.provider
+              ? Navigator.pushReplacementNamed(
+                  context,
+                  '/provider_services',
+                )
+              : Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/garage",
+                  (route) => false, // removes Signup & ExtendedSignup
+                );
         }
       } else {
         String errorMessage = 'Failed to save profile';
         try {
           final errorBody = jsonDecode(response.body);
-          errorMessage = errorBody['message'] ?? errorBody['error'] ?? errorMessage;
+          errorMessage =
+              errorBody['message'] ?? errorBody['error'] ?? errorMessage;
         } catch (_) {}
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(errorMessage)));
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error saving profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error saving profile: $e')));
       }
     } finally {
       if (mounted) {
@@ -190,7 +210,9 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                         const SizedBox(height: 20),
                         Center(
                           child: Text(
-                            'Provider Information',
+                            signupState.role == Role.provider
+                                ? 'Provider Information'
+                                : 'Client Information',
                             textAlign: TextAlign.center,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontSize: 30,
@@ -200,9 +222,13 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                         ),
                         const SizedBox(height: 40),
 
-                        Text('First Name',
-                            style: GoogleFonts.poppins(
-                                fontSize: 15, fontWeight: FontWeight.w500)),
+                        Text(
+                          'First Name',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: fNameController,
@@ -210,21 +236,27 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                           decoration: InputDecoration(
                             hintStyle: GoogleFonts.poppins(fontSize: 20),
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
+                              vertical: 15,
+                              horizontal: 10,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           validator: (value) =>
                               value == null || value.trim().isEmpty
-                                  ? 'First name is required'
-                                  : null,
+                              ? 'First name is required'
+                              : null,
                         ),
                         const SizedBox(height: 16),
 
-                        Text('Last Name',
-                            style: GoogleFonts.poppins(
-                                fontSize: 15, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Last Name',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: lNameController,
@@ -232,33 +264,43 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                           decoration: InputDecoration(
                             hintStyle: GoogleFonts.poppins(fontSize: 20),
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
+                              vertical: 15,
+                              horizontal: 10,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           validator: (value) =>
                               value == null || value.trim().isEmpty
-                                  ? 'Last name is required'
-                                  : null,
+                              ? 'Last name is required'
+                              : null,
                         ),
                         const SizedBox(height: 16),
 
-                        Text('Gender',
-                            style: GoogleFonts.poppins(
-                                fontSize: 15, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Gender',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 5),
                         DropdownButtonFormField<Gender>(
                           initialValue: signupState.gender,
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
+                              vertical: 15,
+                              horizontal: 10,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          hint: Text('Select Gender',
-                              style: GoogleFonts.poppins(fontSize: 15)),
+                          hint: Text(
+                            'Select Gender',
+                            style: GoogleFonts.poppins(fontSize: 15),
+                          ),
                           items: Gender.values
                               .map(
                                 (gender) => DropdownMenuItem(
@@ -273,7 +315,9 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                               .toList(),
                           onChanged: (value) {
                             if (value != null) {
-                              ref.read(signupProvider.notifier).updateGender(value);
+                              ref
+                                  .read(signupProvider.notifier)
+                                  .updateGender(value);
                             }
                           },
                           validator: (value) =>
@@ -281,9 +325,13 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                         ),
                         const SizedBox(height: 16),
 
-                        Text('Date of Birth',
-                            style: GoogleFonts.poppins(
-                                fontSize: 15, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Date of Birth',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: dobController,
@@ -291,23 +339,28 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                           decoration: InputDecoration(
                             hintText: 'Select Date of Birth',
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
+                              vertical: 15,
+                              horizontal: 10,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                             suffixIcon: const Icon(Icons.calendar_today),
                           ),
                           onTap: selectDate,
-                          validator: (value) =>
-                              value == null || value.isEmpty
-                                  ? 'Please select a date'
-                                  : null,
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please select a date'
+                              : null,
                         ),
                         const SizedBox(height: 16),
 
-                        Text('Address',
-                            style: GoogleFonts.poppins(
-                                fontSize: 15, fontWeight: FontWeight.w500)),
+                        Text(
+                          'Address',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                         const SizedBox(height: 5),
                         TextFormField(
                           controller: addressController,
@@ -316,22 +369,22 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
                           decoration: InputDecoration(
                             hintStyle: GoogleFonts.poppins(fontSize: 20),
                             contentPadding: const EdgeInsets.symmetric(
-                                vertical: 15, horizontal: 10),
+                              vertical: 15,
+                              horizontal: 10,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
                           validator: (value) =>
                               value == null || value.trim().isEmpty
-                                  ? 'Address is required'
-                                  : null,
-                          onTap: () => showAddressBottomSheet(
-                            context,
-                            (address) {
-                              addressController.text = address;
-                              formKey.currentState?.validate();
-                            },
-                          ),
+                              ? 'Address is required'
+                              : null,
+                          onTap: () =>
+                              showAddressBottomSheet(context, (address) {
+                                addressController.text = address;
+                                formKey.currentState?.validate();
+                              }),
                         ),
 
                         const SizedBox(height: 16),
@@ -342,15 +395,15 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
               ),
 
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 child: SizedBox(
                   width: double.infinity,
                   child: isSubmitting
                       ? const Center(child: CircularProgressIndicator())
-                      : Button(
-                          btnText: 'Proceed',
-                          onTap: _submitProfile,
-                        ),
+                      : Button(btnText: 'Proceed', onTap: _submitProfile),
                 ),
               ),
             ],
@@ -360,5 +413,3 @@ class _ProviderExtendedSignUpState extends ConsumerState<ProviderExtendedSignUp>
     );
   }
 }
-
-

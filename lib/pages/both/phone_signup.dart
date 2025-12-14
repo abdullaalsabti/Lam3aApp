@@ -6,7 +6,7 @@ import 'package:lamaa/services/api_service.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-import '../widgets/button.dart';
+import '../../widgets/button.dart';
 
 class PhoneSignup extends ConsumerStatefulWidget {
   const PhoneSignup({super.key});

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/service_categories_provider.dart';
-import '../models/service_category.dart';
+import '../../providers/service_categories_provider.dart';
+import '../../models/service_category.dart';
 
 class ServiceSelectionPage extends ConsumerWidget {
   const ServiceSelectionPage({super.key});

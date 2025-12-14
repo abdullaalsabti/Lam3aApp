@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/api_service.dart';
+import 'package:lamaa/widgets/day_availability_card.dart';
+import '../../services/api_service.dart';
 
 class ProviderAvailabilityPage extends StatefulWidget {
   const ProviderAvailabilityPage({super.key});
@@ -11,14 +12,14 @@ class ProviderAvailabilityPage extends StatefulWidget {
 }
 
 class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
-  final Map<String, _DayAvailabilityState> _days = {
-    'Sunday': _DayAvailabilityState(),
-    'Monday': _DayAvailabilityState(),
-    'Tuesday': _DayAvailabilityState(),
-    'Wednesday': _DayAvailabilityState(),
-    'Thursday': _DayAvailabilityState(),
-    'Friday': _DayAvailabilityState(),
-    'Saturday': _DayAvailabilityState(),
+  final Map<String, DayAvailabilityState> _days = {
+    'Sunday': DayAvailabilityState(),
+    'Monday': DayAvailabilityState(),
+    'Tuesday': DayAvailabilityState(),
+    'Wednesday': DayAvailabilityState(),
+    'Thursday': DayAvailabilityState(),
+    'Friday': DayAvailabilityState(),
+    'Saturday': DayAvailabilityState(),
   };
 
   bool _isSubmitting = false;
@@ -166,11 +167,11 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
             style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade700),
           ),
           const SizedBox(height: 16),
-          ..._days.entries.map((entry) => _DayAvailabilityCard(
+          ..._days.entries.map((entry) => DayAvailabilityCard(
                 day: entry.key,
                 state: entry.value,
                 onToggle: (v) => setState(() => entry.value.enabled = v),
-                onAddSlot: () => setState(() => entry.value.slots.add(_TimeSlotRange())),
+                onAddSlot: () => setState(() => entry.value.slots.add(TimeSlotRange())),
                 onRemoveSlot: (idx) => setState(() => entry.value.slots.removeAt(idx)),
                 onPickStart: (idx) => _pickTime(day: entry.key, slotIndex: idx, isStart: true),
                 onPickEnd: (idx) => _pickTime(day: entry.key, slotIndex: idx, isStart: false),
@@ -203,102 +204,13 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
   }
 }
 
-class _DayAvailabilityState {
+class DayAvailabilityState {
   bool enabled = false;
-  List<_TimeSlotRange> slots = [_TimeSlotRange()];
+  List<TimeSlotRange> slots = [TimeSlotRange()];
 }
 
-class _TimeSlotRange {
+class TimeSlotRange {
   TimeOfDay? start;
   TimeOfDay? end;
 }
-
-class _DayAvailabilityCard extends StatelessWidget {
-  final String day;
-  final _DayAvailabilityState state;
-  final ValueChanged<bool> onToggle;
-  final VoidCallback onAddSlot;
-  final void Function(int idx) onRemoveSlot;
-  final void Function(int idx) onPickStart;
-  final void Function(int idx) onPickEnd;
-
-  const _DayAvailabilityCard({
-    required this.day,
-    required this.state,
-    required this.onToggle,
-    required this.onAddSlot,
-    required this.onRemoveSlot,
-    required this.onPickStart,
-    required this.onPickEnd,
-  });
-
-  String _formatLabel(TimeOfDay? t) {
-    if (t == null) return '--:--';
-    final hh = t.hour.toString().padLeft(2, '0');
-    final mm = t.minute.toString().padLeft(2, '0');
-    return '$hh:$mm';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(day, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600)),
-                Switch(value: state.enabled, onChanged: onToggle),
-              ],
-            ),
-            if (state.enabled) ...[
-              const SizedBox(height: 8),
-              ...List.generate(state.slots.length, (i) {
-                final slot = state.slots[i];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => onPickStart(i),
-                          child: Text(_formatLabel(slot.start)),
-                        ),
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 8),
-                        child: Text('to'),
-                      ),
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => onPickEnd(i),
-                          child: Text(_formatLabel(slot.end)),
-                        ),
-                      ),
-                      if (state.slots.length > 1)
-                        IconButton(
-                          onPressed: () => onRemoveSlot(i),
-                          icon: const Icon(Icons.delete_outline),
-                        ),
-                    ],
-                  ),
-                );
-              }),
-              TextButton.icon(
-                onPressed: onAddSlot,
-                icon: const Icon(Icons.add),
-                label: Text('Add more hours', style: GoogleFonts.poppins()),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 

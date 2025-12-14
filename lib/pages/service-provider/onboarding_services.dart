@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/assets/services_dummy_json.dart';
-import '../providers/sign_up_providers.dart';
-import '../widgets/button.dart';
+import '../../providers/sign_up_providers.dart';
+import '../../widgets/button.dart';
 
 class OnBoardingServices extends ConsumerStatefulWidget {
   const OnBoardingServices({super.key});
@@ -196,7 +196,7 @@ class _OnBoardingServicesState extends ConsumerState<ConsumerStatefulWidget> {
           btnText: 'Save & Continue',
           onTap: () {
             final isValid = _submitForm();
-            isValid ? Navigator.pushNamed(context, '/onboarding_availability') : null;
+            isValid ? Navigator.pushNamed(context, '/provider_availability') : null;
           },
         ),
       ),

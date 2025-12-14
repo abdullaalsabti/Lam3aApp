@@ -21,3 +21,6 @@ final serviceCategoriesProvider = FutureProvider<List<ServiceCategory>>((ref) as
     throw Exception('Error loading service categories: $e');
   }
 });
+
+
+

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import '../models/service_request.dart';
-import '../services/api_service.dart';
+import '../../models/service_request.dart';
+import '../../services/api_service.dart';
 
 class ProviderAvailableRequestsPage extends ConsumerStatefulWidget {
   const ProviderAvailableRequestsPage({super.key});

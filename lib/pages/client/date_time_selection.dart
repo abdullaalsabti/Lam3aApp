@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import '../models/service_category.dart';
-import '../models/vehicle.dart';
-import '../providers/vehicles_provider.dart';
-import '../enums/payment_method.dart';
-import '../pages/address_bottom_sheet.dart';
-import '../services/api_service.dart';
+import '../../models/service_category.dart';
+import '../../models/vehicle.dart';
+import '../../providers/vehicles_provider.dart';
+import '../../enums/payment_method.dart';
+import '../../widgets/address_bottom_sheet.dart';
+import '../../services/api_service.dart';
 
 class DateTimeSelectionPage extends ConsumerStatefulWidget {
   final ServiceCategory category;

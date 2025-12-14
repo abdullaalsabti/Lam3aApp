@@ -21,3 +21,6 @@ final clientHomeProvider = FutureProvider<ClientHomeData>((ref) async {
     throw Exception('Error loading home data: $e');
   }
 });
+
+
+

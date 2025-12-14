@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../providers/service_requests_provider.dart';
-import '../enums/service_status.dart';
+import '../../providers/service_requests_provider.dart';
+import '../../enums/service_status.dart';
 import 'dart:convert';
-import '../services/api_service.dart';
+import '../../services/api_service.dart';
 
 class ClientRequestsPage extends ConsumerStatefulWidget {
   const ClientRequestsPage({super.key});

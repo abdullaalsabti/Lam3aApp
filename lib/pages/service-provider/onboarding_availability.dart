@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:lamaa/widgets/day_hour_card.dart';
 
-import '../widgets/button.dart';
+import '../../widgets/button.dart';
 
 class OnBoardingAvailability extends ConsumerStatefulWidget {
   const OnBoardingAvailability({super.key});

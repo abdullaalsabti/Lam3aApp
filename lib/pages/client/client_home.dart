@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/client_home_provider.dart';
-import '../models/client_home.dart';
-import '../models/vehicle.dart';
-import '../models/service_category.dart';
+import '../../providers/client_home_provider.dart';
+import '../../models/client_home.dart';
+import '../../models/vehicle.dart';
+import '../../models/service_category.dart';
 
 class ClientHomePage extends ConsumerStatefulWidget {
   const ClientHomePage({super.key});
@@ -27,9 +27,11 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
           // Set default selected vehicle if not set
           if (_selectedVehicle == null && homeData.vehicles.isNotEmpty) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
-              setState(() {
-                _selectedVehicle = homeData.vehicles.first;
-              });
+              if (mounted && _selectedVehicle == null) {
+                setState(() {
+                  _selectedVehicle = homeData.vehicles.first;
+                });
+              }
             });
           }
 
@@ -129,7 +131,10 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
                       ),
                       TextButton(
                         onPressed: () {
-                          // Navigate to all providers page
+                          // TODO: Navigate to all providers page when implemented
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Providers page coming soon!')),
+                          );
                         },
                         child: Text(
                           'see all →',
@@ -207,7 +212,6 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
           ),
         ),
       ),
-      bottomNavigationBar: _BottomNavigationBar(selectedIndex: 1),
     );
   }
 }
@@ -219,26 +223,34 @@ class _LocationSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.location_on, color: Colors.blue, size: 20),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              address.isEmpty ? 'Select location' : address,
-              style: GoogleFonts.poppins(fontSize: 14),
-              overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: () {
+        // TODO: Implement location selection/editing
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Location editing coming soon!')),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.blue, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                address.isEmpty ? 'Select location' : address,
+                style: GoogleFonts.poppins(fontSize: 14),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-          const Icon(Icons.arrow_drop_down, color: Colors.grey),
-        ],
+            const Icon(Icons.arrow_drop_down, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
@@ -482,8 +494,11 @@ class _ProviderCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Exterior Detailing', // This would come from provider services
-                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                  provider.isAvailable ? 'Available' : 'Unavailable',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12, 
+                    color: provider.isAvailable ? Colors.green : Colors.grey,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -556,42 +571,6 @@ class _PromotionalCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _BottomNavigationBar extends StatelessWidget {
-  final int selectedIndex;
-
-  const _BottomNavigationBar({required this.selectedIndex});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: selectedIndex,
-      onTap: (index) {
-        if (index == 0) {
-          Navigator.pushReplacementNamed(context, '/garage');
-        } else if (index == 1) {
-          // Already on home
-        } else if (index == 2) {
-          // Navigate to profile
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_car),
-          label: 'Lam3a',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],
     );
   }
 }
