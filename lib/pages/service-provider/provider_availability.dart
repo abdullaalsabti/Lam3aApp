@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lamaa/pages/service-provider/provider_main_page.dart';
 import 'package:lamaa/widgets/day_availability_card.dart';
 import '../../services/api_service.dart';
 
@@ -122,7 +123,7 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Availability saved successfully!')),
         );
-        Navigator.pushReplacementNamed(context, '/provider_available_requests');
+        Navigator.pushNamedAndRemoveUntil(context, "/provider_main",   (route) => false); // remove past routes;
       } else {
         String msg = 'Failed to save availability';
         try {

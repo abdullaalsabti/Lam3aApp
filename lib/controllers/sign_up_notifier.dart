@@ -30,15 +30,16 @@ class SignUpNotifier extends StateNotifier<SignUpData> {
     state = state.copyWith(userId: userId);
   }
 
-  void updateServices(String newService){
-    final currentService = state.services;
+  // void updateServices(String newService){
+  //   final currentService = state.services;
 
-    if (currentService.contains(newService)) return;
+  //   if (currentService.contains(newService)) return;
 
-    final updatedServices = [...currentService, newService];
+  //   final updatedServices = [...currentService, newService];
 
-    state = state.copyWith(services: updatedServices);
-  }
+  //   state = state.copyWith(services: updatedServices);
+  // }
+  
 
   void updateServicePrice(String servicePrice){
     state = state.copyWith(servicePrice: servicePrice);

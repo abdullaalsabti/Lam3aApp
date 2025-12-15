@@ -100,7 +100,7 @@ class _LoginClientState extends ConsumerState<LoginClient> {
 
   void _navigateAfterLogin(Role role) {
     final route = role == Role.provider
-        ? '/provider_available_requests'
+        ? '/provider_main'
         : '/main_page';
     Navigator.pushReplacementNamed(context, route);
   }

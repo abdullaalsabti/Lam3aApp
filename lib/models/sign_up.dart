@@ -1,5 +1,7 @@
 import 'package:lamaa/enums/role.dart';
 import 'package:lamaa/enums/gender.dart';
+import 'package:lamaa/enums/services.dart';
+import 'package:lamaa/models/provider_service.dart';
 import 'package:uuid/uuid.dart';
 
 class SignUpData {
@@ -14,7 +16,7 @@ class SignUpData {
   final String addressLandmark;
   final Role role;
   final Gender gender;
-  final List<String> services;
+  final List<ProviderService> services;
   final String servicePrice;
   final String estServiceTime;
   final String serviceDesc;
@@ -69,7 +71,7 @@ class SignUpData {
     String? addressLandmark,
     Role? role,
     Gender? gender,
-    List<String>? services,
+    List<ProviderService>? services,
     String? servicePrice,
     String? estServiceTime,
     String? serviceDesc,
@@ -86,7 +88,7 @@ class SignUpData {
       addressLandmark: addressLandmark ?? this.addressLandmark,
       role: role ?? this.role,
       gender: gender ?? this.gender,
-      services: services ?? List.from(this.services),
+      services: services ?? List.from(this.services), // dpep copy now shallow copy
       servicePrice: servicePrice ?? this.servicePrice,
       estServiceTime: estServiceTime ?? this.estServiceTime,
       serviceDesc: serviceDesc ?? this.serviceDesc,

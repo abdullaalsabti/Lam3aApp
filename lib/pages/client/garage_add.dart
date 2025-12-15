@@ -24,7 +24,6 @@ class GarageAdd extends ConsumerStatefulWidget {
 }
 
 class _GarageAddState extends ConsumerState<GarageAdd> {
-  bool _isLoading = false;
   final List<Map<String, dynamic>> vehicleTypes = [
     {'image': 'lib/assets/images/sedan_car.png', 'label': 'Sedan'},
     {'image': 'lib/assets/images/suv_car.png', 'label': 'SUV'},
@@ -131,12 +130,8 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
             ref.invalidate(clientHomeProvider);
 
             // Navigate to garage page after adding/editing
-            if (isEditing) {
+            if (isEditing) 
               Navigator.pop(context); // Just go back if editing
-            } else {
-              // Navigate to garage page after adding new vehicle
-              Navigator.pushReplacementNamed(context, '/main_page');
-            }
           }
         } else {
 

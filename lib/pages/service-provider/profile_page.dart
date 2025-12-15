@@ -5,14 +5,14 @@ import 'package:lamaa/services/api_service.dart';
 import 'package:lamaa/providers/vehicles_provider.dart';
 import 'dart:convert';
 
-class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+class ProviderProfileScreen extends ConsumerStatefulWidget {
+  const ProviderProfileScreen({super.key});
 
   @override
-  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProviderProfileScreen> createState() => _ProviderProfileScreenState();
 }
 
-class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
   Map<String, dynamic>? _profileData;
   bool _isLoading = true;
   String? _error;
@@ -30,13 +30,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
 
     try {
-      final response = await ApiService().getAuthenticated('api/client/ClientProfile/getProfile');
+      final response = await ApiService().getAuthenticated('api/provider/ProviderProfile/getProfile');
       
       if (response.statusCode == 200) {
         setState(() {
           _profileData = jsonDecode(response.body);
           _isLoading = false;
+         
         });
+        print("response is : ${response.body}");
       } else {
         setState(() {
           _error = 'Failed to load profile';
@@ -90,9 +92,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // Clear tokens
       await ApiService().logout();
       
-      // Invalidate all providers to clear cached data
-      ref.invalidate(vehiclesProvider);
-      
       if (mounted) {
         // Navigate to first page and clear navigation stack
         Navigator.pushNamedAndRemoveUntil(
@@ -104,7 +103,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 

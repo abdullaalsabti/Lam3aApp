@@ -11,5 +11,14 @@ class AppTheme {
     textTheme: AppTextStyles.lightTextTheme,
     inputDecorationTheme: inputDecorationThemeLight,
     elevatedButtonTheme: elevatedButtonThemeLight,
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      type: BottomNavigationBarType.fixed,
+      backgroundColor: Colors.white,
+      selectedItemColor: Color(0xFF23918C), // Primary teal
+      unselectedItemColor: Color(0XFF6B7A8F), // Gray
+      selectedLabelStyle: TextStyle(fontSize: 12),
+      unselectedLabelStyle: TextStyle(fontSize: 12),
+      elevation: 8,
+    ),
   );
 }
