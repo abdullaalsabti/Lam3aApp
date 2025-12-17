@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:lamaa/enums/role.dart';
 import 'package:lamaa/providers/client_home_provider.dart';
+import 'package:lamaa/providers/providerServices_provider.dart';
 import 'package:lamaa/providers/service_requests_provider.dart';
 import 'package:lamaa/providers/sign_up_providers.dart';
 import 'package:lamaa/providers/vehicles_provider.dart';
@@ -169,6 +170,8 @@ class AuthService {
     if (role == Role.client) {
       ref.invalidate(vehiclesProvider);
       ref.invalidate(clientHomeProvider);
+    }else if(role == Role.provider){
+      ref.invalidate(providerServiceProvider);
     }
   }
 

@@ -81,7 +81,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         ref.read(signupProvider.notifier).updateRole(Role.provider);
         
         if (mounted) {
-          Navigator.pushReplacementNamed(context, '/first_page');
+          Navigator.pushReplacementNamed(context, '/provider_main');
         }
         return;
       }

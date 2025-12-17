@@ -6,21 +6,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart';
 import 'package:lamaa/models/provider_service.dart';
+import 'package:lamaa/providers/providerServices_provider.dart';
 import 'package:lamaa/services/api_service.dart';
 import '../../providers/sign_up_providers.dart';
 import '../../widgets/button.dart';
 
 class OnBoardingServices extends ConsumerStatefulWidget {
-  final bool isOnboarding; // true = signup flow, false = logged-in adding service
-  
-  const OnBoardingServices({
-    super.key,
-    this.isOnboarding = true, // default to true for backward compatibility
-  });
+  final bool isOnboarding;
+  final ProviderService? service;
+
+  const OnBoardingServices({super.key, this.isOnboarding = true, this.service});
 
   @override
-  ConsumerState<OnBoardingServices> createState() =>
-      _OnBoardingServicesState();
+  ConsumerState<OnBoardingServices> createState() => _OnBoardingServicesState();
 }
 
 class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
@@ -28,16 +26,47 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _estTimeController = TextEditingController();
   final TextEditingController _servDescController = TextEditingController();
+  static const baseEndpoint = "api/provider/services";
+
   String? categoryId;
   var apiService = ApiService();
   String? errorMessage;
   List<Category> categories = [];
   final _formKey = GlobalKey<FormState>();
+  bool isEditing = false;
 
   @override
   void initState() {
     super.initState();
+    isEditing = widget.service != null;
+    if (isEditing) {
+      _priceController.text = widget.service!.price.toString();
+      _estTimeController.text = widget.service!.estimatedTime.toString();
+      _servDescController.text = widget.service!.description.toLowerCase();
+      categoryId = widget.service!.categoryId;
+    }
     fetchCategories(); // ✅ Fetch categories when widget loads
+  }
+
+  void _onEdit(ProviderService newService) async {
+    try {
+      if (widget.service!.serviceId != null) {
+
+        final id = widget.service!.serviceId;
+        final endpoint = "$baseEndpoint/$id";
+        final res = await apiService.putAuthenticated(endpoint,newService.toJson(),);
+
+        if (res.statusCode == 200) {
+          ref.invalidate(providerServiceProvider);
+          _showSnackbar("service editted succfully");
+          Navigator.of(context).pop();
+        } else {
+          _showSnackbar("service failed to edit ");
+        }
+      }
+    } catch (ex) {
+      _showSnackbar("service failed to edit $ex");
+    }
   }
 
   //fetch categories from backend
@@ -49,12 +78,10 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
     });
 
     try {
-      const endpoint = "api/provider/services/categories";
-      print("hello woelr");
+      const endpoint = "$baseEndpoint/categories";
       final res = await apiService.getAuthenticated(endpoint);
-      
+
       if (res.statusCode == 200) {
-        print("fetched succfuly ${res.body}");
         final List<dynamic> decoded = jsonDecode(res.body) as List<dynamic>;
 
         final loadedCategories = decoded.map((category) {
@@ -85,7 +112,7 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  void _sendToBackend(ProviderService service) async {
+  void _addService(ProviderService service) async {
     try {
       String postServiceEndpoint = "api/provider/services";
       Response res = await apiService.postAuthenticated(
@@ -95,18 +122,14 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
 
       if (res.statusCode == 200) {
         _showSnackbar("service added succesfuly");
-        
+
         // Handle navigation based on context
         if (widget.isOnboarding) {
           // During signup: go to availability page
           Navigator.pushNamed(context, "/provider_availability");
         } else {
           // When logged in: go back to main page or pop
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            "/provider_main",
-            (route) => false,
-          );
+          Navigator.of(context).pop();
         }
       } else if (res.statusCode == 404) {
         _showSnackbar("category not found");
@@ -134,7 +157,7 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
         price: double.parse(price),
         estimatedTime: int.parse(estTime),
       );
-      _sendToBackend(service);
+      isEditing ? _onEdit(service) : _addService(service);
 
       return true;
     } else {
@@ -153,7 +176,9 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
     if (loadingCategories == false) {
       content = DropdownButtonFormField<String>(
         value: categoryId,
-        isExpanded: true, // Prevents overflow by making dropdown take full width
+        initialValue: isEditing ? widget.service!.categoryId : null,
+        isExpanded:
+            true, // Prevents overflow by making dropdown take full width
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(
             vertical: 15,
@@ -190,8 +215,8 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text("Select Your Services", style: theme.textTheme.titleLarge),
-        backgroundColor: Colors.white,
+        title: Text(isEditing ? "Edit Your Services" : "Add Your Service", style: theme.textTheme.titleLarge!.copyWith(color: theme.colorScheme.onPrimary)),
+        backgroundColor: theme.primaryColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20),
@@ -288,17 +313,21 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
                 maxLines: null,
                 decoration: InputDecoration(
                   contentPadding: const EdgeInsets.symmetric(
-                    vertical: 45,
+                    vertical: 10,
                     horizontal: 10,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
+                validator: (value){
+                  if(value == null || value.trim().isEmpty){
+                    return "you should add description for your service";
+                  }
+                  return null;
+                },
               ),
-              const SizedBox(
-                height: 20,
-              ), // reduced space for better layout
+              const SizedBox(height: 20), // reduced space for better layout
             ],
           ),
         ),
@@ -307,7 +336,11 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Button(
-            btnText: widget.isOnboarding ? 'Save & Continue' : 'Add Service',
+            btnText: widget.isOnboarding
+                ? 'Save & Continue'
+                : isEditing
+                ? 'Edit Service'
+                : 'Add Service',
             onTap: () {
               _submitForm();
             },

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lamaa/theme/text_style.dart';
 
-import '../color_scheme.dart';
+import '../theme/color_scheme.dart';
 
 final inputDecorationThemeLight = InputDecorationTheme(
   filled: false,

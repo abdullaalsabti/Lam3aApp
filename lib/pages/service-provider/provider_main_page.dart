@@ -4,6 +4,7 @@ import 'package:lamaa/pages/service-provider/onboarding_services.dart';
 import 'package:lamaa/pages/service-provider/profile_page.dart';
 import 'package:lamaa/pages/service-provider/provider_availability.dart';
 import 'package:lamaa/pages/service-provider/provider_available_requests.dart';
+import 'package:lamaa/pages/service-provider/provider_services.dart';
 
 class ProviderMainPage extends StatefulWidget {
   const ProviderMainPage({super.key});
@@ -17,8 +18,8 @@ class _ProviderMainPageState extends State<ProviderMainPage> {
 
   final List<Widget> _screens = [
     ProviderAvailableRequestsPage(),
-    ProviderAvailabilityPage(),
-    OnBoardingServices(isOnboarding: false), // Logged-in flow - stays on page after adding service
+    ProviderAvailabilityPage(onBoarding: false,),
+    ProviderServices(), // Logged-in flow - stays on page after adding service
     ProviderProfileScreen()
   ];
 

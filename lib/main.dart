@@ -73,7 +73,7 @@ class MyApp extends StatelessWidget {
         '/provider_services': (context) => const OnBoardingServices(isOnboarding: true), // Signup flow
         '/provider_add_service': (context) => const OnBoardingServices(isOnboarding: false), // Logged-in flow
         '/client_home': (context) => const ClientHomePage(),
-        '/provider_availability': (context) => const ProviderAvailabilityPage(),
+        '/provider_availability': (context) =>  ProviderAvailabilityPage(),
         '/provider_available_requests': (context) => const ProviderAvailableRequestsPage(),
         '/provider_my_requests': (context) => const ProviderMyRequestsPage(),
         '/provider_main': (context) => const ProviderMainPage(),

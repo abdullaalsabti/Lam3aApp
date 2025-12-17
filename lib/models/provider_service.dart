@@ -1,11 +1,13 @@
 class ProviderService {
+
+  String? serviceId;
   String categoryId;
   String description;
   double price;
   String? categoryName;
   int estimatedTime;
 
-  ProviderService({required this.categoryId , required this.description , required this.price ,  this.categoryName , required this.estimatedTime });
+  ProviderService({required this.categoryId , this.serviceId, required this.description , required this.price ,  this.categoryName , required this.estimatedTime });
 
     Map<String, dynamic> toJson() {
     return {
@@ -15,6 +17,18 @@ class ProviderService {
       "estimatedTime": estimatedTime
     };
   }
+
+  factory ProviderService.fromJson(Map<String ,dynamic> service){
+    return ProviderService(
+      serviceId: service["id"],
+      categoryId: service["categoryId"], 
+      categoryName: service["category"],
+      description: service["description"], 
+      price: service["price"], 
+      estimatedTime: service["estimatedTime"]
+    );
+  }
+
 }
 
 //sample post data 

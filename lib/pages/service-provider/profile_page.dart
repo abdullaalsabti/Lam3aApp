@@ -38,7 +38,6 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
           _isLoading = false;
          
         });
-        print("response is : ${response.body}");
       } else {
         setState(() {
           _error = 'Failed to load profile';
@@ -101,6 +100,17 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
         );
       }
     }
+  }
+
+  String _formateDateOfBirth(){
+   if(_profileData?["dateOfBirth"]!= null){
+      String date = _profileData?["dateOfBirth"];
+      print(date);
+
+      List<String> datesValues = date.split("-");
+      return "${datesValues[0]}-${datesValues[1]}-${datesValues[2].substring(0,2)}";
+   }
+   return "not set";
   }
 
   @override
@@ -219,7 +229,7 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
                             _buildInfoCard(
                               icon: Icons.calendar_today_outlined,
                               label: 'Date of Birth',
-                              value: _profileData!['dateOfBirth']?.toString() ?? 'Not set',
+                              value: _formateDateOfBirth(),
                             ),
                           const SizedBox(height: 12),
                           if (_profileData!['address'] != null)
@@ -310,6 +320,7 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
   String _formatAddress(Map<String, dynamic> address) {
     final parts = <String>[];
     if (address['street'] != null && address['street'].toString().isNotEmpty) {
+      print("address of the street is ${address['street']}");
       parts.add(address['Street'].toString());
     }
     if (address['buildingNumber'] != null && address['buildingNumber'].toString().isNotEmpty) {
@@ -318,6 +329,7 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
     if (address['landmark'] != null && address['landmark'].toString().isNotEmpty) {
       parts.add(address['landmark'].toString());
     }
+    print(parts);
     return parts.isEmpty ? 'Not set' : parts.join(', ');
   }
 }
