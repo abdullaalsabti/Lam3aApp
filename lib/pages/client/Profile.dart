@@ -103,6 +103,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     }
   }
+    String _formateDateOfBirth(){
+   if(_profileData?["dateOfBirth"]!= null){
+      String date = _profileData?["dateOfBirth"];
+      print(date);
+
+      List<String> datesValues = date.split("-");
+      return "${datesValues[0]}-${datesValues[1]}-${datesValues[2].substring(0,2)}";
+   }
+   return "not set";
+  }
 
    @override
   Widget build(BuildContext context) {
@@ -216,18 +226,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             value: _profileData!['lastName']?.toString() ?? 'Not set',
                           ),
                           const SizedBox(height: 12),
-                          if (_profileData!['dateOfBirth'] != null)
+                            if (_profileData!['dateOfBirth'] != null)
                             _buildInfoCard(
                               icon: Icons.calendar_today_outlined,
                               label: 'Date of Birth',
-                              value: _profileData!['dateOfBirth']?.toString() ?? 'Not set',
+                              value: _formateDateOfBirth(),
                             ),
                           const SizedBox(height: 12),
-                          if (_profileData!['address'] != null)
+                          if (_profileData!['Address'] != null || _profileData!['address'] != null)
                             _buildInfoCard(
                               icon: Icons.location_on_outlined,
-                              label: 'address',
-                              value: _formatAddress(_profileData!['address']),
+                              label: 'Address',
+                              value: _formatAddress(_profileData!['Address'] ?? _profileData!['address']),
                             ),
                         ],
 
@@ -310,15 +320,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   String _formatAddress(Map<String, dynamic> address) {
     final parts = <String>[];
-    if (address['street'] != null && address['street'].toString().isNotEmpty) {
-      parts.add(address['Street'].toString());
+    // Backend returns PascalCase, but check both cases for compatibility
+    final street = address['Street'] ?? address['street'];
+    if (street != null && street.toString().isNotEmpty) {
+      parts.add(street.toString());
     }
-    if (address['buildingNumber'] != null && address['buildingNumber'].toString().isNotEmpty) {
-      parts.add(address['buildingNumber'].toString());
+    
+    final buildingNumber = address['BuildingNumber'] ?? address['buildingNumber'];
+    if (buildingNumber != null && buildingNumber.toString().isNotEmpty) {
+      parts.add(buildingNumber.toString());
     }
-    if (address['landmark'] != null && address['landmark'].toString().isNotEmpty) {
-      parts.add(address['landmark'].toString());
+    
+    final landmark = address['Landmark'] ?? address['landmark'];
+    if (landmark != null && landmark.toString().isNotEmpty) {
+      parts.add(landmark.toString());
     }
+    
     return parts.isEmpty ? 'Not set' : parts.join(', ');
   }
 }

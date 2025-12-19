@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/services/api_service.dart';
-import 'package:lamaa/providers/vehicles_provider.dart';
 import 'dart:convert';
 
 class ProviderProfileScreen extends ConsumerStatefulWidget {
@@ -232,11 +231,11 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
                               value: _formateDateOfBirth(),
                             ),
                           const SizedBox(height: 12),
-                          if (_profileData!['address'] != null)
+                          if (_profileData!['Address'] != null || _profileData!['address'] != null)
                             _buildInfoCard(
                               icon: Icons.location_on_outlined,
-                              label: 'address',
-                              value: _formatAddress(_profileData!['address']),
+                              label: 'Address',
+                              value: _formatAddress(_profileData!['Address'] ?? _profileData!['address']),
                             ),
                         ],
 
@@ -319,17 +318,22 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
 
   String _formatAddress(Map<String, dynamic> address) {
     final parts = <String>[];
-    if (address['street'] != null && address['street'].toString().isNotEmpty) {
-      print("address of the street is ${address['street']}");
-      parts.add(address['Street'].toString());
+    // Backend returns PascalCase, but check both cases for compatibility
+    final street = address['Street'] ?? address['street'];
+    if (street != null && street.toString().isNotEmpty) {
+      parts.add(street.toString());
     }
-    if (address['buildingNumber'] != null && address['buildingNumber'].toString().isNotEmpty) {
-      parts.add(address['buildingNumber'].toString());
+    
+    final buildingNumber = address['BuildingNumber'] ?? address['buildingNumber'];
+    if (buildingNumber != null && buildingNumber.toString().isNotEmpty) {
+      parts.add(buildingNumber.toString());
     }
-    if (address['landmark'] != null && address['landmark'].toString().isNotEmpty) {
-      parts.add(address['landmark'].toString());
+    
+    final landmark = address['Landmark'] ?? address['landmark'];
+    if (landmark != null && landmark.toString().isNotEmpty) {
+      parts.add(landmark.toString());
     }
-    print(parts);
+    
     return parts.isEmpty ? 'Not set' : parts.join(', ');
   }
 }

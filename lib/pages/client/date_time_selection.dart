@@ -96,13 +96,13 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
     }
   }
 
-  void _showAddressSheet() {
-    showAddressBottomSheet(context, (address) {
-      setState(() {
-        _selectedAddress = address;
-      });
-    });
-  }
+  // void _showAddressSheet() {
+  //   showAddressBottomSheet(context, (address) {
+  //     setState(() {
+  //       _selectedAddress = address;
+  //     });
+  //   });
+  // }
 
   void _proceedToProviderSelection() {
     if (!_formKey.currentState!.validate()) {
@@ -192,7 +192,7 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
                   suffixIcon: const Icon(Icons.location_on),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                onTap: _showAddressSheet,
+                onTap: (){},
                 validator: (value) {
                   if (_selectedAddress.isEmpty) {
                     return 'Address is required';

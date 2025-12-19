@@ -5,8 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lamaa/enums/gender.dart';
 import 'package:lamaa/enums/role.dart';
-import 'package:lamaa/pages/client/garage_page.dart';
 import 'package:lamaa/widgets/address_bottom_sheet.dart';
+import 'package:lamaa/models/address.dart';
 import 'package:lamaa/providers/sign_up_providers.dart';
 import 'package:lamaa/services/api_service.dart';
 import '../../widgets/button.dart';
@@ -20,7 +20,7 @@ class ExtendedSignup extends ConsumerStatefulWidget {
 
 class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
   final formKey = GlobalKey<FormState>();
-
+  bool loadingLocation = false;
   late final TextEditingController fNameController = TextEditingController();
   late final TextEditingController lNameController = TextEditingController();
   late final TextEditingController dobController = TextEditingController();
@@ -28,6 +28,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
 
   DateTime? selectedDate;
   bool isSubmitting = false;
+  Address? selectedAddress;
 
   @override
   void dispose() {
@@ -36,6 +37,34 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
     dobController.dispose();
     addressController.dispose();
     super.dispose();
+  }
+
+  void _showAddressSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return AddressBottomSheet(
+          onAddressSaved: (Address address) {
+            setState(() {
+              selectedAddress = address;
+              // Update the address display text
+              final parts = <String>[];
+              if (address.streetName != null && address.streetName!.isNotEmpty) {
+                parts.add(address.streetName!);
+              }
+              if (address.houseNumber != null) {
+                parts.add(address.houseNumber.toString());
+              }
+              if (address.landmark != null && address.landmark!.isNotEmpty) {
+                parts.add(address.landmark!);
+              }
+              addressController.text = parts.join(', ');
+            });
+          },
+        );
+      },
+    );
   }
 
   Future<void> selectDate() async {
@@ -62,36 +91,23 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
     }
   }
 
-  Map<String, String> _parseAddress(String address) {
-    final trimmed = address.trim();
-    final commaIndex = trimmed.indexOf(',');
-
-    if (commaIndex == -1) {
-      return {
-        'buildingNumber': trimmed.isEmpty ? '0' : trimmed,
-        'landmark': '',
-      };
-    } else {
-      final buildingNumber = trimmed.substring(0, commaIndex).trim();
-      final landmark = trimmed.substring(commaIndex + 1).trim();
-      return {
-        'buildingNumber': buildingNumber.isEmpty ? '0' : buildingNumber,
-        'landmark': landmark,
-      };
-    }
-  }
-
   Future<void> _submitProfile() async {
     if (formKey.currentState == null || !formKey.currentState!.validate()) {
       return;
     }
 
+    // Validate required fields including address
     if (fNameController.text.isEmpty ||
         lNameController.text.isEmpty ||
         selectedDate == null ||
-        addressController.text.isEmpty) {
+        selectedAddress == null ||
+        selectedAddress!.latitude == null ||
+        selectedAddress!.longitude == null ||
+        selectedAddress!.streetName == null ||
+        selectedAddress!.streetName!.isEmpty ||
+        selectedAddress!.houseNumber == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all required fields')),
+        const SnackBar(content: Text('Please fill in all required fields, including address')),
       );
       return;
     }
@@ -101,7 +117,6 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
     });
 
     try {
-      final addressParts = _parseAddress(addressController.text);
       final signupState = ref.read(signupProvider);
 
       final dateOfBirth = selectedDate!;
@@ -115,19 +130,21 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
       );
       final dobString = dateOfBirthUtc.toIso8601String();
 
+      // Build address object with real data from AddressBottomSheet
+      final address = selectedAddress!;
       final body = {
         'firstName': fNameController.text.trim(),
         'lastName': lNameController.text.trim(),
         'gender': _mapGenderToBackend(signupState.gender),
         'dateOfBirth': dobString,
         'address': {
-          'street': 'Default Street',
-          'buildingNumber': addressParts['buildingNumber'] ?? '0',
-          'landmark':
-              addressParts['landmark']?.toString().trim().isNotEmpty == true
-              ? addressParts['landmark']
-              : 'Amman',
-          'coordinates': {'latitude': 31.9539, 'longitude': 35.9106},
+          'street': address.streetName ?? '',
+          'buildingNumber': address.houseNumber?.toString() ?? '',
+          'landmark': address.landmark?.trim() ?? '', // Optional, can be empty string
+          'coordinates': {
+            'latitude': address.latitude!,
+            'longitude': address.longitude!,
+          },
         },
       };
 
@@ -150,10 +167,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
             const SnackBar(content: Text('Profile saved successfully!')),
           );
           userData.role == Role.provider
-              ? Navigator.pushReplacementNamed(
-                  context,
-                  '/provider_services',
-                )
+              ? Navigator.pushReplacementNamed(context, '/provider_services')
               : Navigator.pushNamedAndRemoveUntil(
                   context,
                   "/garage",
@@ -376,15 +390,15 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          validator: (value) =>
-                              value == null || value.trim().isEmpty
-                              ? 'Address is required'
-                              : null,
-                          onTap: () =>
-                              showAddressBottomSheet(context, (address) {
-                                addressController.text = address;
-                                formKey.currentState?.validate();
-                              }),
+                          validator: (value) {
+                            if (selectedAddress == null ||
+                                selectedAddress!.latitude == null ||
+                                selectedAddress!.longitude == null) {
+                              return 'Please select your address';
+                            }
+                            return null;
+                          },
+                          onTap: _showAddressSheet,
                         ),
 
                         const SizedBox(height: 16),
