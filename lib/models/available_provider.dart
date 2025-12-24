@@ -8,7 +8,6 @@ class AvailableProvider {
   final String serviceDescription;
   final int estimatedTime;
   final String? categoryName;
-  final double? distance;
 
   AvailableProvider({
     required this.providerId,
@@ -20,22 +19,47 @@ class AvailableProvider {
     required this.serviceDescription,
     required this.estimatedTime,
     this.categoryName,
-    this.distance,
   });
 
   factory AvailableProvider.fromJson(Map<String, dynamic> json) {
+    // Backend DTO (`Lam3a.Dto.ServiceRequest.AvailableProviderDto`) returns:
+    // { id, serviceId, name, rating, price, estimatedTime, serviceDescription, location }
+    final fullName =
+        (json['Name'] ?? json['name'] ?? '').toString().trim();
+    final nameParts = fullName.isEmpty
+        ? const <String>[]
+        : fullName.split(RegExp(r'\s+'));
+
+    final derivedFirstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final derivedLastName =
+        nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
     return AvailableProvider(
-      providerId: json['ProviderId']?.toString() ?? json['providerId']?.toString() ?? '',
-      firstName: json['FirstName'] ?? json['firstName'] ?? '',
-      lastName: json['LastName'] ?? json['lastName'] ?? '',
+      providerId: json['ProviderId']?.toString() ??
+          json['providerId']?.toString() ??
+          json['Id']?.toString() ??
+          json['id']?.toString() ??
+          '',
+      firstName: json['FirstName'] ??
+          json['firstName'] ??
+          derivedFirstName,
+      lastName: json['LastName'] ??
+          json['lastName'] ??
+          derivedLastName,
       rating: (json['Rating'] ?? json['rating'] ?? 0).toDouble(),
       serviceId: json['ServiceId']?.toString() ?? json['serviceId']?.toString() ?? '',
-      servicePrice: (json['ServicePrice'] ?? json['servicePrice'] ?? 0).toDouble(),
-      serviceDescription: json['ServiceDescription'] ?? json['serviceDescription'] ?? '',
+      servicePrice: (json['ServicePrice'] ??
+              json['servicePrice'] ??
+              json['Price'] ??
+              json['price'] ??
+              0)
+          .toDouble(),
+      serviceDescription: json['ServiceDescription'] ??
+          json['serviceDescription'] ??
+          '',
       estimatedTime: json['EstimatedTime'] ?? json['estimatedTime'] ?? 0,
       categoryName: json['CategoryName'] ?? json['categoryName'],
-      distance: json['Distance'] != null ? (json['Distance'] as num).toDouble() : 
-                json['distance'] != null ? (json['distance'] as num).toDouble() : null,
+
     );
   }
 
@@ -50,16 +74,11 @@ class AvailableProvider {
       'serviceDescription': serviceDescription,
       'estimatedTime': estimatedTime,
       'categoryName': categoryName,
-      'distance': distance,
     };
   }
 
   String get fullName => '$firstName $lastName';
 }
-
-
-
-
 
 
 

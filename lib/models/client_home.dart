@@ -24,7 +24,13 @@ class ClientHomeData {
           .map((p) => PopularProvider.fromJson(p))
           .toList(),
       services: ((json['Services'] ?? json['services']) as List? ?? [])
-          .map((s) => ServiceCategory.fromJson(s))
+          .map((s) {
+            // Debug: Print raw service data to verify structure
+            print('Raw service data: $s');
+            final category = ServiceCategory.fromJson(s);
+            print('Parsed category - id: ${category.id}, name: ${category.name}');
+            return category;
+          })
           .toList(),
     );
   }

@@ -29,12 +29,12 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    // Try loading .env file - it should be in the project root (same directory as pubspec.yaml)
-    await dotenv.load(fileName: '.env');
+    // Load env file from assets (see `pubspec.yaml` assets list)
+    await dotenv.load(fileName: 'lib/assets/env');
     debugPrint('Loaded .env successfully. API_BASE_URL: ${dotenv.env['API_BASE_URL']}');
   } catch (e) {
-    debugPrint('Warning: Could not load .env file: $e');
-    debugPrint('Using default API_BASE_URL: 192.168.1.11:5003');
+    debugPrint('Warning: Could not load env file: $e');
+    debugPrint('Using default API_BASE_URL from ApiService fallback.');
   }
 
   runApp(const ProviderScope(child: MyApp()));

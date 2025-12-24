@@ -9,11 +9,14 @@ final vehiclesProvider = FutureProvider<List<Vehicle>>((ref) async {
     final response = await ApiService().getAuthenticated('api/client/Vehicle/getVehicles');
     
     if (response.statusCode == 200) {
-
       final responseBody = response.body;
+      print('Vehicles API Response: $responseBody'); // Debug
+      
       final List<dynamic> data = jsonDecode(responseBody);
+      print('Parsed vehicles count: ${data.length}'); // Debug
       
       final vehicles = data.map((v) {
+        print('Vehicle data: $v'); // Debug
         return Vehicle.fromJson(v);
       }).toList();
       

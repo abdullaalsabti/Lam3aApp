@@ -40,7 +40,11 @@ class _ProviderMyRequestsPageState extends ConsumerState<ProviderMyRequestsPage>
     });
 
     try {
-      final response = await ApiService().getAuthenticated('api/provider/ServiceRequest/getMyRequests');
+      // Backend uses ProviderOrderController:
+      // GET /api/provider/ProviderOrder/getOrders
+      final response = await ApiService().getAuthenticated(
+        'api/provider/ProviderOrder/getOrders',
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -64,9 +68,11 @@ class _ProviderMyRequestsPageState extends ConsumerState<ProviderMyRequestsPage>
 
   Future<void> _updateStatus(String requestId, ServiceStatus newStatus) async {
     try {
+      // Backend: PUT /api/provider/ProviderOrder/{requestId}/status?newStatus=...
+      final encoded = Uri.encodeQueryComponent(newStatus.name);
       final response = await ApiService().putAuthenticated(
-        'api/provider/ServiceRequest/updateStatus/$requestId',
-        {'status': newStatus.name},
+        'api/provider/ProviderOrder/$requestId/status?newStatus=$encoded',
+        {},
       );
 
       if (response.statusCode == 200) {

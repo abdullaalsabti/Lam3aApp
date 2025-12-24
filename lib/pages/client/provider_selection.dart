@@ -4,9 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import '../../models/service_category.dart';
 import '../../models/vehicle.dart';
-import '../../models/available_provider.dart';
+import '../../models/provider.dart';
 import '../../enums/payment_method.dart';
 import '../../services/api_service.dart';
+import '../../widgets/provider_widget.dart';
 
 class ProviderSelectionPage extends ConsumerStatefulWidget {
   final Map<String, dynamic> requestData;
@@ -18,9 +19,10 @@ class ProviderSelectionPage extends ConsumerStatefulWidget {
 }
 
 class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
-  List<AvailableProvider>? _providers;
+  List<ProviderServiceInfo>? _providers;
   bool _isLoading = true;
   String? _error;
+  String? _selectedProviderId;
   bool _isSubmitting = false;
 
   @override
@@ -38,88 +40,72 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
     try {
       final category = widget.requestData['category'] as ServiceCategory;
       final requestedDateTime = widget.requestData['requestedDateTime'] as DateTime;
+      print("category is ${category.id} and requested date time is ${requestedDateTime}");
+      // Backend expects: GET /api/client/AvailableProviders?serviceCategoryId=...&startDate=...
+      final startDateUtc = requestedDateTime.toUtc().toIso8601String();
+      final encodedStartDate = Uri.encodeQueryComponent(startDateUtc);
 
       final response = await ApiService().getAuthenticated(
-        'api/client/ServiceRequest/getAvailableProviders?categoryId=${category.id}&requestedDateTime=${requestedDateTime.toIso8601String()}',
+        'api/client/AvailableProviders?serviceCategoryId=${category.id}&startDate=$encodedStartDate',
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _providers = data.map((p) => AvailableProvider.fromJson(p)).toList();
-          _isLoading = false;
-        });
+        print("response 200 ${response.body}");
+        try {
+          final List<dynamic> data = jsonDecode(response.body);
+          print("Parsed ${data.length} providers");
+          
+          final providers = <ProviderServiceInfo>[];
+          for (var i = 0; i < data.length; i++) {
+            try {
+              final provider = ProviderServiceInfo.fromJson(data[i]);
+              print("Provider $i: ${provider.name} (ID: ${provider.serviceProviderId})");
+              providers.add(provider);
+            } catch (parseError) {
+              print("Error parsing provider $i: $parseError");
+              print("Raw data: ${data[i]}");
+            }
+          }
+          
+          setState(() {
+            _providers = providers;
+            _isLoading = false;
+          });
+        } catch (jsonError) {
+          print("JSON decode error: $jsonError");
+          setState(() {
+            _error = 'Failed to parse provider data: ${jsonError.toString()}';
+            _isLoading = false;
+          });
+        }
       } else {
-        setState(() {
-          _error = 'Failed to load providers';
-          _isLoading = false;
-        });
+        print("Response status: ${response.statusCode}");
+        print("Response body: ${response.body}");
+        try {
+          final errorBody = jsonDecode(response.body);
+          setState(() {
+            _error = errorBody['message']?.toString() ?? 'Failed to load providers';
+            _isLoading = false;
+          });
+        } catch (_) {
+          setState(() {
+            _error = 'Failed to load providers (Status: ${response.statusCode})';
+            _isLoading = false;
+          });
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print("Exception in _loadAvailableProviders: $e");
+      print("Stack trace: $stackTrace");
       setState(() {
-        _error = 'Error: $e';
+        _error = 'Error loading providers: ${e.toString()}';
         _isLoading = false;
       });
     }
   }
 
-  Future<void> _createServiceRequest(AvailableProvider provider) async {
-    setState(() {
-      _isSubmitting = true;
-    });
 
-    try {
-      final vehicle = widget.requestData['vehicle'] as Vehicle;
-      final requestedDateTime = widget.requestData['requestedDateTime'] as DateTime;
-      final addressId = widget.requestData['addressId'] as String? ?? '';
-      final paymentMethod = widget.requestData['paymentMethod'] as PaymentMethod;
-
-      final body = {
-        'serviceProviderId': provider.providerId,
-        'serviceId': provider.serviceId,
-        'vehiclePlateNumber': vehicle.plateNumber,
-        'requestedDateTime': requestedDateTime.toIso8601String(),
-        'addressId': addressId,
-        'paymentMethod': paymentMethod.name,
-      };
-
-      final response = await ApiService().postAuthenticated(
-        'api/client/ServiceRequest/create',
-        body,
-      );
-
-      if (response.statusCode == 200) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Service request created successfully!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-          Navigator.pushReplacementNamed(context, '/client_requests');
-        }
-      } else {
-        final errorData = jsonDecode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorData['message'] ?? 'Failed to create service request'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isSubmitting = false;
-      });
-    }
-  }
+   
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +115,7 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          "Select provider",
+          "Select Provider",
           style: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.w600,
@@ -137,115 +123,109 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
           ),
         ),
         backgroundColor: scheme.primary,
+        elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_error!),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadAvailableProviders,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : _providers == null || _providers!.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No available providers for the selected service and time',
-                        style: GoogleFonts.poppins(fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _providers!.length,
-                      itemBuilder: (context, index) {
-                        final provider = _providers![index];
-                        return Card(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          elevation: 2,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      provider.fullName,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.star, color: Colors.amber, size: 20),
-                                        Text(
-                                          provider.rating.toStringAsFixed(1),
-                                          style: GoogleFonts.poppins(fontSize: 16),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  provider.serviceDescription,
-                                  style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      '${provider.estimatedTime} min',
-                                      style: GoogleFonts.poppins(fontSize: 14),
-                                    ),
-                                    Text(
-                                      '${provider.servicePrice.toStringAsFixed(2)} JOD',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w600,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton(
-                                    onPressed: _isSubmitting
-                                        ? null
-                                        : () => _createServiceRequest(provider),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: scheme.primary,
-                                    ),
-                                    child: _isSubmitting
-                                        ? const CircularProgressIndicator(color: Colors.white)
-                                        : Text(
-                                            'Select',
-                                            style: GoogleFonts.poppins(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ],
+      body: RefreshIndicator(
+        onRefresh: _loadAvailableProviders,
+        color: scheme.primary,
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline_rounded,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _error!,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.grey.shade700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _loadAvailableProviders,
+                            icon: const Icon(Icons.refresh_rounded),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: scheme.primary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
                             ),
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     ),
+                  )
+                : _providers == null || _providers!.isEmpty
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.search_off_rounded,
+                                size: 64,
+                                color: Colors.grey.shade400,
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No available providers',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No providers are available for the selected service and time slot.',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.grey.shade600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _providers!.length,
+                        itemBuilder: (context, index) {
+                          final provider = _providers![index];
+                          final isSelected = _selectedProviderId == provider.serviceProviderId;
+                          
+                          return ProviderServiceInfoCard(
+                            info: provider,
+                            isLoading: isSelected && _isSubmitting,
+                            onSelect: () {
+                              // TODO: Implement service request creation
+                              // Backend ServiceRequestController is currently empty
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Service request creation coming soon!'),
+                                  backgroundColor: Colors.orange,
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+      ),
     );
   }
 }

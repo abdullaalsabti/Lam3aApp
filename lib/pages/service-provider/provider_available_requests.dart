@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../../models/service_request.dart';
 import '../../services/api_service.dart';
+import '../../widgets/availability_slider.dart';
 
 class ProviderAvailableRequestsPage extends ConsumerStatefulWidget {
   const ProviderAvailableRequestsPage({super.key});
@@ -17,11 +18,16 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
   List<ServiceRequest>? _requests;
   bool _isLoading = true;
   String? _error;
+  
+  // Availability state
+  bool? _availability;
+  bool _isLoadingAvailability = false;
 
   @override
   void initState() {
     super.initState();
     _loadRequests();
+    _fetchAvailability();
   }
 
   Future<void> _loadRequests() async {
@@ -31,7 +37,11 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
     });
 
     try {
-      final response = await ApiService().getAuthenticated('api/provider/ServiceRequest/getAvailableRequests');
+      // Backend uses ProviderOrderController:
+      // GET /api/provider/ProviderOrder/getOrders?status=Pending
+      final response = await ApiService().getAuthenticated(
+        'api/provider/ProviderOrder/getOrders?status=Pending',
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -55,8 +65,9 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
 
   Future<void> _acceptRequest(String requestId) async {
     try {
-      final response = await ApiService().postAuthenticated(
-        'api/provider/ServiceRequest/accept/$requestId',
+      // Backend: PUT /api/provider/ProviderOrder/{requestId}/accept
+      final response = await ApiService().putAuthenticated(
+        'api/provider/ProviderOrder/$requestId/accept',
         {},
       );
 
@@ -91,9 +102,11 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
 
   Future<void> _rejectRequest(String requestId) async {
     try {
-      final response = await ApiService().postAuthenticated(
-        'api/provider/ServiceRequest/reject/$requestId',
-        {'action': 'reject'},
+      // Backend: PUT /api/provider/ProviderOrder/{requestId}/reject
+      // Body: { reason?: string }
+      final response = await ApiService().putAuthenticated(
+        'api/provider/ProviderOrder/$requestId/reject',
+        {'reason': null},
       );
 
       if (response.statusCode == 200) {
@@ -125,6 +138,117 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
     }
   }
 
+  Future<void> _fetchAvailability() async {
+    setState(() {
+      _isLoadingAvailability = true;
+    });
+
+    try {
+      final response = await ApiService().getAuthenticated(
+        'api/provider/ProviderProfile/availability',
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _availability = data['availability'] as bool? ?? false;
+            _isLoadingAvailability = false;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _availability = false;
+            _isLoadingAvailability = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to load availability status'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _availability = false;
+          _isLoadingAvailability = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading availability: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _updateAvailability(bool availability) async {
+    setState(() {
+      _isLoadingAvailability = true;
+    });
+
+    try {
+      // ASP.NET Core binds simple types from query string by default
+      final endpoint = 'api/provider/ProviderProfile/availability?availability=$availability';
+      final response = await ApiService().patchAuthenticated(
+        endpoint,
+        {},
+      );
+
+      if (response.statusCode == 200) {
+        if (mounted) {
+          setState(() {
+            _availability = availability;
+            _isLoadingAvailability = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                availability
+                    ? 'You are now online'
+                    : 'You are now offline',
+              ),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        if (mounted) {
+          setState(() {
+            _isLoadingAvailability = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                errorData['message'] ??
+                    errorData['error'] ??
+                    'Failed to update availability',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingAvailability = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating availability: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -142,35 +266,46 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
         ),
         backgroundColor: scheme.primary,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_error!),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadRequests,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : _requests == null || _requests!.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No available requests',
-                        style: GoogleFonts.poppins(fontSize: 16),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadRequests,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _requests!.length,
-                        itemBuilder: (context, index) {
+      body: Column(
+        children: [
+          // Availability Slider at the top
+          if (_availability != null)
+            AvailabilitySlider(
+              isAvailable: _availability!,
+              isLoading: _isLoadingAvailability,
+              onToggle: _updateAvailability,
+            ),
+          // Main content
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(_error!),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadRequests,
+                              child: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : _requests == null || _requests!.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No available requests',
+                              style: GoogleFonts.poppins(fontSize: 16),
+                            ),
+                          )
+                        : RefreshIndicator(
+                            onRefresh: _loadRequests,
+                            child: ListView.builder(
+                              padding: const EdgeInsets.all(16),
+                              itemCount: _requests!.length,
+                              itemBuilder: (context, index) {
                           final request = _requests![index];
                           return Card(
                             margin: const EdgeInsets.only(bottom: 16),
@@ -239,6 +374,9 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
                         },
                       ),
                     ),
+          ),
+        ],
+      ),
     );
   }
 }

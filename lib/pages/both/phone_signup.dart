@@ -19,6 +19,7 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
   final formKey = GlobalKey<FormState>();
   final phoneFocus = FocusNode();
   final phoneController = TextEditingController();
+  final ApiService apiService = ApiService();
   static const String countryCode = '+962';
 
   @override
@@ -44,7 +45,7 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
 
   String? phoneValidator(String? value) {
     if (value == null || value.isEmpty) return 'please enter a phone number';
-    
+
     // Ensure it starts with +962
     if (!value.startsWith(countryCode)) {
       return 'Phone number must start with $countryCode';
@@ -78,18 +79,11 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
 
     try {
       // Login with saved email and password to get token
-      const String baseUrl = '192.168.1.11:5003';
-      final url = Uri.http(baseUrl, 'api/Auth/login');
+      var response = await apiService.post("api/Auth/login", {
+        'email': signupData.email,
+        'password': signupData.password,
+      });
       
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json; charset=UTF-8'},
-        body: jsonEncode({
-          'email': signupData.email,
-          'password': signupData.password,
-        }),
-      );
-
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
       }
@@ -110,14 +104,15 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
         String errorMessage = 'Failed to login after phone verification';
         try {
           final errorBody = jsonDecode(response.body);
-          errorMessage = errorBody['message'] ?? 
-                        errorBody['error'] ?? 
-                        errorBody['Message'] ?? 
-                        errorMessage;
+          errorMessage =
+              errorBody['message'] ??
+              errorBody['error'] ??
+              errorBody['Message'] ??
+              errorMessage;
         } catch (e) {
           errorMessage = 'API Error: ${response.statusCode}. Please try again.';
         }
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -223,10 +218,11 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
                             // Prevent deletion of country code
                             if (!value.startsWith(countryCode)) {
                               // If user tries to delete +962, restore it
-                              final newValue = value.isEmpty 
-                                  ? countryCode 
-                                  : countryCode + value.replaceAll(RegExp(r'^\+962'), '');
-                              
+                              final newValue = value.isEmpty
+                                  ? countryCode
+                                  : countryCode +
+                                        value.replaceAll(RegExp(r'^\+962'), '');
+
                               phoneController.value = TextEditingValue(
                                 text: newValue,
                                 selection: TextSelection.collapsed(
@@ -235,15 +231,19 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
                               );
                               return;
                             }
-                            
+
                             // Prevent cursor from going before +962
-                            if (phoneController.selection.start < countryCode.length) {
-                              phoneController.selection = TextSelection.collapsed(
-                                offset: countryCode.length,
-                              );
+                            if (phoneController.selection.start <
+                                countryCode.length) {
+                              phoneController.selection =
+                                  TextSelection.collapsed(
+                                    offset: countryCode.length,
+                                  );
                             }
-                            
-                            ref.read(signupProvider.notifier).updatePhone(value);
+
+                            ref
+                                .read(signupProvider.notifier)
+                                .updatePhone(value);
                           },
                         ),
                       ),

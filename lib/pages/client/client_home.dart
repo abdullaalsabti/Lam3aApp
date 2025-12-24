@@ -409,6 +409,14 @@ class _ServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        // Debug: Verify category id and name are available
+        print('Service Category - ID: ${service.id}, Name: ${service.name}');
+        if (service.id.isEmpty) {
+          print('WARNING: Service category ID is empty!');
+        }
+        if (service.name.isEmpty) {
+          print('WARNING: Service category name is empty!');
+        }
         Navigator.pushNamed(
           context,
           '/date_time_selection',

@@ -1,13 +1,26 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
   final _storage = const FlutterSecureStorage();
   
-  // API Base URL - hardcoded for physical device
-  static const String _baseUrl = '192.168.1.11:5003';
+  /// API Base URL (configure via `.env` using `API_BASE_URL`)
+  ///
+  /// Examples:
+  /// - Phone over USB (recommended): `http://127.0.0.1:5003` + `adb reverse tcp:5003 tcp:5003`
+  /// - Same Wi‑Fi LAN: `http://192.168.1.11:5002` (backend must bind `0.0.0.0:5002`)
+  static String get _baseUrl {
+    final env = dotenv.env['API_BASE_URL'];
+    if (env != null && env.trim().isNotEmpty) return env.trim();
+    // Default to adb-reverse friendly URL.
+    return 'http://127.0.0.1:5003';
+  }
+  
+  // Timeout duration for HTTP requests (10 seconds)
+  static const Duration _timeoutDuration = Duration(seconds: 10);
   
   // Singleton pattern
   static final ApiService _instance = ApiService._internal();
@@ -46,7 +59,7 @@ class ApiService {
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({'RefreshToken': refreshToken}),
-      );
+      ).timeout(_timeoutDuration);
 
       if (response.statusCode == 200) {
         final responseBody = jsonDecode(response.body);
@@ -69,14 +82,14 @@ class ApiService {
 
   // Helper to get full URL
   Uri _getUri(String endpoint) {
-    // Construct full URL
-    String fullPath = _baseUrl.endsWith('/') ? '$_baseUrl$endpoint' : '$_baseUrl/$endpoint';
-    
-    // Add http:// if not present
-    if (!fullPath.startsWith('http')) {
-      fullPath = 'http://$fullPath';
+    var base = _baseUrl;
+    if (!base.startsWith('http://') && !base.startsWith('https://')) {
+      base = 'http://$base';
     }
-    return Uri.parse(fullPath);
+
+    final baseUri = Uri.parse(base.endsWith('/') ? base : '$base/');
+    final normalizedEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    return baseUri.resolve(normalizedEndpoint);
   }
 
   // Generic POST request with Auth (with auto-refresh on 401)
@@ -91,7 +104,7 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode(body),
-    );
+    ).timeout(_timeoutDuration);
 
     // If 401, try to refresh token and retry once
     if (response.statusCode == 401) {
@@ -105,7 +118,7 @@ class ApiService {
             'Authorization': 'Bearer $newToken',
           },
           body: jsonEncode(body),
-        );
+        ).timeout(_timeoutDuration);
       }
     }
 
@@ -120,7 +133,7 @@ class ApiService {
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(body),
-    );
+    ).timeout(_timeoutDuration);
   }
 
   // Generic GET request with Auth (with auto-refresh on 401)
@@ -134,7 +147,7 @@ class ApiService {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-    );
+    ).timeout(_timeoutDuration);
 
     // If 401, try to refresh token and retry once
     if (response.statusCode == 401) {
@@ -147,7 +160,7 @@ class ApiService {
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $newToken',
           },
-        );
+        ).timeout(_timeoutDuration);
       }
     }
 
@@ -162,7 +175,7 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json; charset=UTF-8',
       },
-    );
+    ).timeout(_timeoutDuration);
   }
 
   // Generic PUT request with Auth (with auto-refresh on 401)
@@ -177,7 +190,7 @@ class ApiService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode(body),
-    );
+    ).timeout(_timeoutDuration);
 
     // If 401, try to refresh token and retry once
     if (response.statusCode == 401) {
@@ -191,7 +204,7 @@ class ApiService {
             'Authorization': 'Bearer $newToken',
           },
           body: jsonEncode(body),
-        );
+        ).timeout(_timeoutDuration);
       }
     }
 
@@ -209,7 +222,7 @@ class ApiService {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-    );
+    ).timeout(_timeoutDuration);
 
     // If 401, try to refresh token and retry once
     if (response.statusCode == 401) {
@@ -222,7 +235,40 @@ class ApiService {
             'Content-Type': 'application/json; charset=UTF-8',
             'Authorization': 'Bearer $newToken',
           },
-        );
+        ).timeout(_timeoutDuration);
+      }
+    }
+
+    return response;
+  }
+
+  // Generic PATCH request with Auth (with auto-refresh on 401)
+  Future<http.Response> patchAuthenticated(String endpoint, Map<String, dynamic> body) async {
+    final token = await getToken();
+    final url = _getUri(endpoint);
+    
+    var response = await http.patch(
+      url,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    ).timeout(_timeoutDuration);
+
+    // If 401, try to refresh token and retry once
+    if (response.statusCode == 401) {
+      final refreshed = await refreshAccessToken();
+      if (refreshed) {
+        final newToken = await getToken();
+        response = await http.patch(
+          url,
+          headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+            'Authorization': 'Bearer $newToken',
+          },
+          body: jsonEncode(body),
+        ).timeout(_timeoutDuration);
       }
     }
 

@@ -39,7 +39,6 @@ class SignUpNotifier extends StateNotifier<SignUpData> {
 
   //   state = state.copyWith(services: updatedServices);
   // }
-  
 
   void updateServicePrice(String servicePrice){
     state = state.copyWith(servicePrice: servicePrice);

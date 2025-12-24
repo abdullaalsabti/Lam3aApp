@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lamaa/pages/service-provider/provider_main_page.dart';
 import 'package:lamaa/widgets/day_availability_card.dart';
 import '../../services/api_service.dart';
 
 class ProviderAvailabilityPage extends StatefulWidget {
-
-  ProviderAvailabilityPage({super.key , this.onBoarding = true});
-  bool onBoarding;
+  final bool onBoarding;
+  
+  const ProviderAvailabilityPage({super.key, this.onBoarding = true});
 
   @override
   State<ProviderAvailabilityPage> createState() => _ProviderAvailabilityPageState();
@@ -26,33 +25,103 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
   };
 
   bool _isSubmitting = false;
+  bool _isLoadingSchedule = false;
+  String? _scheduleError;
+  
   //fetching schedule from database
-  Future<void> _fetchSchedule()async {
-    try{
-         final response = await ApiService().getAuthenticated('api/provider/ProviderProfile/getAvailability');
+  Future<void> _fetchSchedule() async {
+    if (!mounted) return;
+    
+    setState(() {
+      _isLoadingSchedule = true;
+      _scheduleError = null;
+    });
 
-         if(response.statusCode == 200){
-            List<dynamic> body = jsonDecode(response.body) ;
+    try {
+      final response = await ApiService().getAuthenticated('api/provider/ProviderProfile/schedule');
 
-            for(Map<String,dynamic> day in body){
-              DayAvailabilityState dayAvailabilityState = DayAvailabilityState();
-              dayAvailabilityState.enabled = true;
-              List<TimeSlotRange> timeSlots = [];
-              for(Map<String,dynamic> slot in day["timeSlots"]){
-                var t = TimeSlotRange(start: convertToTime(slot["start"]) ,end: convertToTime(slot["end"]));
-                timeSlots.add(t);
+      if (response.statusCode == 200) {
+        final body = jsonDecode(response.body);
+        
+        // Handle both list and empty response
+        if (body is List && body.isNotEmpty) {
+          for (Map<String, dynamic> day in body) {
+            DayAvailabilityState dayAvailabilityState = DayAvailabilityState();
+            dayAvailabilityState.enabled = true;
+            List<TimeSlotRange> timeSlots = [];
+            
+            if (day["timeSlots"] != null && day["timeSlots"] is List) {
+              for (Map<String, dynamic> slot in day["timeSlots"]) {
+                try {
+                  var t = TimeSlotRange(
+                    start: convertToTime(slot["start"]),
+                    end: convertToTime(slot["end"])
+                  );
+                  timeSlots.add(t);
+                } catch (e) {
+                  debugPrint('Error parsing time slot: $e');
+                }
               }
-              dayAvailabilityState.slots = timeSlots;
+            }
+            
+            dayAvailabilityState.slots = timeSlots.isNotEmpty ? timeSlots : [TimeSlotRange()];
+            
+            if (mounted) {
               setState(() {
                 _days[day["day"]] = dayAvailabilityState;
               });
             }
-         }
-
-    } catch(ex) {
-        print("crashed $ex");
+          }
+          debugPrint('Schedule loaded successfully: ${_days.keys.length} days');
+        } else {
+          // No schedule data - keep default empty state
+          debugPrint('No schedule data found');
+        }
+      } else {
+        // Non-200 status code
+        String errorMsg = 'Failed to load schedule (Status: ${response.statusCode})';
+        try {
+          final errorBody = jsonDecode(response.body);
+          errorMsg = errorBody['message'] ?? errorBody['error'] ?? errorMsg;
+        } catch (_) {}
+        
+        if (mounted) {
+          setState(() {
+            _scheduleError = errorMsg;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMsg),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      }
+    } catch (ex) {
+      debugPrint('Error fetching schedule: $ex');
+      if (mounted) {
+        setState(() {
+          _scheduleError = 'Network error: ${ex.toString()}';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load schedule: ${ex.toString()}'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Retry',
+              textColor: Colors.white,
+              onPressed: _fetchSchedule,
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingSchedule = false;
+        });
+      }
     }
-
   }
 
   Future<void> _pickTime({required String day, required int slotIndex,required bool isStart}) async {
@@ -147,7 +216,7 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
 
     try {
       final response = await ApiService().putAuthenticated(
-        'api/provider/ProviderProfile/editAvailability',
+        'api/provider/ProviderProfile/schedule',
         {
           'availability': availabilityPayload,
         },
@@ -209,22 +278,43 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
         centerTitle: true,
       ),
       body: RefreshIndicator(
-        onRefresh: ()async { 
-          if(widget.onBoarding == false){
+        onRefresh: () async { 
+          if (widget.onBoarding == false) {
             await _fetchSchedule();
           }
-
-           return Future.value(); // important fallback
-         },
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            Text(
-              'Set the times and days you are available to work',
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 16),
-            ..._days.entries.map((entry) => DayAvailabilityCard(
+          return Future.value(); // important fallback
+        },
+        child: _isLoadingSchedule
+            ? const Center(child: CircularProgressIndicator())
+            : _scheduleError != null && _days.values.every((d) => !d.enabled && d.slots.length == 1 && d.slots[0].start == null)
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
+                        const SizedBox(height: 16),
+                        Text(
+                          _scheduleError!,
+                          style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade700),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _fetchSchedule,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      Text(
+                        'Set the times and days you are available to work',
+                        style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade700),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._days.entries.map((entry) => DayAvailabilityCard(
                   day: entry.key,
                   state: entry.value,
                   onToggle: (v) => setState(() => entry.value.enabled = v),

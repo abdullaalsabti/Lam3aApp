@@ -1,0 +1,15 @@
+## This file is bundled with the app (Flutter assets).
+## Configure the backend API base URL here.
+##
+## Phone over USB (recommended):
+## 1) Run backend on your PC (example: localhost:5003)
+## 2) Run: adb reverse tcp:5003 tcp:5003
+## 3) Keep this as:
+##    API_BASE_URL=http://127.0.0.1:5003
+##
+## Same Wi‑Fi LAN:
+## - Use your PC LAN IP and a backend port that binds to 0.0.0.0 (example 5002):
+##   API_BASE_URL=http://192.168.1.11:5002
+API_BASE_URL=http://127.0.0.1:5003
+
+

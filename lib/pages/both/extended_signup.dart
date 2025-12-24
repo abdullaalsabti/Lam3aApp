@@ -153,7 +153,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
 
       userData.role == Role.provider
           ? response = await ApiService().putAuthenticated(
-              'api/provider/ProviderProfile/editProfile',
+              'api/provider/ProviderProfile/',
               body,
             )
           : response = await ApiService().putAuthenticated(

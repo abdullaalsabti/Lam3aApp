@@ -19,38 +19,50 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _checkAutoLogin() async {
-    // Add a small delay for splash screen visibility
-    await Future.delayed(const Duration(milliseconds: 1500));
+    try {
+      // Add a small delay for splash screen visibility
+      await Future.delayed(const Duration(milliseconds: 1500));
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final apiService = ApiService();
-    final refreshToken = await apiService.getRefreshToken();
+      final apiService = ApiService();
+      final refreshToken = await apiService.getRefreshToken();
 
-    // No refresh token - go to first page (role selection)
-    if (refreshToken == null || refreshToken.isEmpty) {
-      if (context.mounted) {
-        Navigator.pushReplacementNamed(context, '/first_page');
+      // No refresh token - go to first page (role selection)
+      if (refreshToken == null || refreshToken.isEmpty) {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/first_page');
+        }
+        return;
       }
-      return;
-    }
 
-    // Try to refresh the access token
-    final refreshed = await apiService.refreshAccessToken();
+      // Try to refresh the access token
+      final refreshed = await apiService.refreshAccessToken();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    if (!refreshed) {
-      // Refresh failed - clear tokens and go to first page
-      await apiService.logout();
+      if (!refreshed) {
+        // Refresh failed - clear tokens and go to first page
+        await apiService.logout();
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/first_page');
+        }
+        return;
+      }
+
+      // Successfully refreshed - get user role and navigate
+      await _navigateToHome(apiService);
+    } catch (e) {
+      // Handle any errors (network timeouts, etc.) - navigate to first page
+      debugPrint('Error during auto login: $e');
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/first_page');
+        final apiService = ApiService();
+        await apiService.logout();
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/first_page');
+        }
       }
-      return;
     }
-
-    // Successfully refreshed - get user role and navigate
-    await _navigateToHome(apiService);
   }
 
   Future<void> _navigateToHome(ApiService apiService) async {
@@ -69,6 +81,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
     } catch (e) {
+      debugPrint('Error getting client profile: $e');
       // If client profile fails, try provider profile
     }
 
@@ -86,11 +99,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
     } catch (e) {
+      debugPrint('Error getting provider profile: $e');
       // Both failed - clear tokens and go to first page
-      await apiService.logout();
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/first_page');
-      }
+    }
+    
+    // If we reach here, both profile checks failed - navigate to first page
+    await apiService.logout();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/first_page');
     }
   }
 
