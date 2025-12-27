@@ -10,24 +10,19 @@ final vehiclesProvider = FutureProvider<List<Vehicle>>((ref) async {
     
     if (response.statusCode == 200) {
       final responseBody = response.body;
-      print('Vehicles API Response: $responseBody'); // Debug
       
       final List<dynamic> data = jsonDecode(responseBody);
-      print('Parsed vehicles count: ${data.length}'); // Debug
       
       final vehicles = data.map((v) {
-        print('Vehicle data: $v'); // Debug
         return Vehicle.fromJson(v);
       }).toList();
       
       return vehicles;
     } else {
-      print('Failed to load vehicles: Status ${response.statusCode}, Body: ${response.body}');
       throw Exception('Failed to load vehicles: ${response.statusCode}');
     }
   } catch (e, stackTrace) {
-    print('Error loading vehicles: $e');
-    print('Stack trace: $stackTrace');
+
     throw Exception('Error loading vehicles: $e');
   }
 });

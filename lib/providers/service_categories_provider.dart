@@ -12,12 +12,9 @@ final serviceCategoriesProvider = FutureProvider<List<ServiceCategory>>((ref) as
       final List<dynamic> data = jsonDecode(response.body);
       return data.map((c) => ServiceCategory.fromJson(c)).toList();
     } else {
-      print('Failed to load service categories: Status ${response.statusCode}');
       throw Exception('Failed to load service categories: ${response.statusCode}');
     }
   } catch (e, stackTrace) {
-    print('Error loading service categories: $e');
-    print('Stack trace: $stackTrace');
     throw Exception('Error loading service categories: $e');
   }
 });

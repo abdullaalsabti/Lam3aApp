@@ -62,13 +62,9 @@ class MyApp extends StatelessWidget {
         '/garage_add': (context) => const GarageAdd(),
         '/service_selection': (context) => const ServiceSelectionPage(),
         '/date_time_selection': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as ServiceCategory;
-          return DateTimeSelectionPage(category: args);
+          return DateTimeSelectionPage();
         },
-        '/provider_selection': (context) {
-          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return ProviderSelectionPage(requestData: args);
-        },
+        '/provider_selection': (context) =>ProviderSelectionPage(),
         '/client_requests': (context) => const ClientRequestsPage(),
         '/provider_services': (context) => const OnBoardingServices(isOnboarding: true), // Signup flow
         '/provider_add_service': (context) => const OnBoardingServices(isOnboarding: false), // Logged-in flow

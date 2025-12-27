@@ -13,9 +13,6 @@ class ApiService {
   /// - Phone over USB (recommended): `http://127.0.0.1:5003` + `adb reverse tcp:5003 tcp:5003`
   /// - Same Wi‑Fi LAN: `http://192.168.1.11:5002` (backend must bind `0.0.0.0:5002`)
   static String get _baseUrl {
-    final env = dotenv.env['API_BASE_URL'];
-    if (env != null && env.trim().isNotEmpty) return env.trim();
-    // Default to adb-reverse friendly URL.
     return 'http://127.0.0.1:5003';
   }
   

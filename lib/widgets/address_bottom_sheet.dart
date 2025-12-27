@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/models/address.dart';
 import 'package:lamaa/services/api_service.dart';
 import 'package:lamaa/widgets/error_message.dart';
+import 'package:lamaa/widgets/location_map_card.dart';
 
 class AddressBottomSheet extends StatefulWidget {
   AddressBottomSheet({super.key, required this.onAddressSaved});
@@ -55,13 +56,13 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
 
     if (formkey.currentState!.validate()) {
       // Build address string
-      int houseNumber = int.parse(houseController.text.trim());
+      String houseNumber = houseController.text.trim();
       String landmark = landmarkController.text.trim();
 
       _address!.houseNumber = houseNumber;
       _address!.landmark = landmark;
       print(_address!.address == null ? "address is null" : _address!.address);
-      
+
       // Return the address via callback and close the bottom sheet
       widget.onAddressSaved(_address!);
       Navigator.pop(context);
@@ -95,7 +96,8 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
       if (!serviceEnabled) {
         setState(() {
           loadingLocation = false;
-          errorMessage = 'Location services are disabled. Please enable them in settings.';
+          errorMessage =
+              'Location services are disabled. Please enable them in settings.';
         });
         throw Exception('Location services are disabled');
       }
@@ -106,7 +108,8 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
         if (permission == LocationPermission.denied) {
           setState(() {
             loadingLocation = false;
-            errorMessage = 'Location permission is required to get your address';
+            errorMessage =
+                'Location permission is required to get your address';
           });
           throw Exception('Location permission denied');
         }
@@ -115,7 +118,8 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
       if (permission == LocationPermission.deniedForever) {
         setState(() {
           loadingLocation = false;
-          errorMessage = 'Location permission permanently denied. Please enable it in app settings.';
+          errorMessage =
+              'Location permission permanently denied. Please enable it in app settings.';
         });
         throw Exception('Location permission permanently denied');
       }
@@ -152,7 +156,8 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
       } catch (ex) {
         print("Error calling geocoding API: $ex");
         setState(() {
-          errorMessage = "Error retrieving address. Coordinates saved but address may be incomplete.";
+          errorMessage =
+              "Error retrieving address. Coordinates saved but address may be incomplete.";
         });
       }
 
@@ -179,30 +184,15 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    Widget locationPreview = Container(
-      height: 160,
-      width: double.infinity,
-      color: Colors.grey[200],
-      child: Icon(Icons.map, size: 60, color: Colors.grey[400]),
+    Widget locationPreview = ClipRRect(
+      borderRadius: BorderRadius.circular(15),
+      child: LocationMapCard(
+        latitude: _address?.latitude,
+        longitude: _address?.longitude,
+        loading: loadingLocation,
+        apiKey: API_KEY,
+      ),
     );
-
-    if (loadingLocation) {
-      locationPreview = Container(
-        height: 160,
-        width: double.infinity,
-        color: Colors.grey[200],
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_address != null) {
-      locationPreview = Image.network(
-        locationImage,
-        height: 160,
-        width: double.infinity,
-        fit: BoxFit.cover,
-      );
-    }
 
     return Padding(
       padding: EdgeInsets.only(
@@ -252,8 +242,8 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
 
               // Error message display under the map
               if (errorMessage != null) ...[
-                SizedBox(height: 8,),
-                ErrorMessage(errorMessage: errorMessage!,),
+                SizedBox(height: 8),
+                ErrorMessage(errorMessage: errorMessage!),
               ],
 
               const SizedBox(height: 8),

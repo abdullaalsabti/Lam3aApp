@@ -1,6 +1,49 @@
+import 'package:lamaa/models/client_home.dart';
+
 import '../enums/service_status.dart';
 import '../enums/payment_method.dart';
 import 'service_category.dart';
+
+
+class ClientServiceRequest {
+  final String? carPlateNumber;
+  final String? clientId;
+  final String? providerId;
+  final ServiceCategory? category;
+  final DateTime? pickUpTime;
+  final CoordinatesData? coordinates;
+  final PaymentMethod? paymentMethod;
+
+  const ClientServiceRequest({
+    this.carPlateNumber,
+    this.clientId,
+    this.providerId,
+    this.category,
+    this.pickUpTime,
+    this.coordinates,
+    this.paymentMethod,
+  });
+
+  ClientServiceRequest copyWith({
+    String? carPlateNumber,
+    String? clientId,
+    String? providerId,
+    ServiceCategory? category,
+    DateTime? pickUpTime,
+    CoordinatesData? coordinates,
+    PaymentMethod? paymentMethod,
+  }) {
+    return ClientServiceRequest(
+      carPlateNumber: carPlateNumber ?? this.carPlateNumber,
+      clientId: clientId ?? this.clientId,
+      providerId: providerId ?? this.providerId,
+      category: category ?? this.category,
+      pickUpTime: pickUpTime ?? this.pickUpTime,
+      coordinates: coordinates ?? this.coordinates,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+    );
+  }
+}
 
 class ServiceRequest {
   final String id;
@@ -57,9 +100,9 @@ class ServiceRequest {
     return {
       'id': id,
       'vehiclePlateNumber': vehiclePlateNumber,
-      'requestedDateTime': requestedDateTime.toIso8601String(),
-      'paymentMethod': paymentMethod.name,
-      'status': status.name,
+      'requestedDateTime': requestedDateTime!.toIso8601String(),
+      'paymentMethod': paymentMethod!.name,
+      'status': status!.name,
       'serviceProviderId': serviceProviderId,
       'serviceId': serviceId,
       'category': category?.toJson(),

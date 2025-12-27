@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/enums/car_type.dart';
 import 'package:lamaa/models/car_brand.dart';
 import 'package:lamaa/models/car_model.dart';
+import 'package:lamaa/pages/client/main_page.dart';
 import 'package:lamaa/providers/car_provider.dart';
 import 'package:lamaa/providers/brands_provider.dart';
 import 'package:lamaa/providers/client_home_provider.dart';
@@ -130,8 +131,11 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
             ref.invalidate(clientHomeProvider);
 
             // Navigate to garage page after adding/editing
-            if (isEditing) 
-              Navigator.pop(context); // Just go back if editing
+            if (isEditing) {
+              Navigator.pop(context);
+             } // Just go back if editing
+             
+              Navigator.push(context, MaterialPageRoute(builder: (ctx)=> MainPage()));
           }
         } else {
 

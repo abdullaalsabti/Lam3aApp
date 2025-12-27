@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lamaa/models/service_request.dart';
+import 'package:lamaa/providers/client_serviceRequest_provider.dart';
 import 'dart:convert';
 import '../../models/service_category.dart';
 import '../../models/vehicle.dart';
@@ -10,9 +13,8 @@ import '../../services/api_service.dart';
 import '../../widgets/provider_widget.dart';
 
 class ProviderSelectionPage extends ConsumerStatefulWidget {
-  final Map<String, dynamic> requestData;
 
-  const ProviderSelectionPage({super.key, required this.requestData});
+  const ProviderSelectionPage({super.key});
 
   @override
   ConsumerState<ProviderSelectionPage> createState() => _ProviderSelectionPageState();
@@ -38,11 +40,12 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
     });
 
     try {
-      final category = widget.requestData['category'] as ServiceCategory;
-      final requestedDateTime = widget.requestData['requestedDateTime'] as DateTime;
-      print("category is ${category.id} and requested date time is ${requestedDateTime}");
+      final request = ref.read(serviceRequestProvider);
+      final requestedDateTime = request.pickUpTime;
+      final category = request.category;
+      print("category is ${category!.id} and requested date time is $requestedDateTime");
       // Backend expects: GET /api/client/AvailableProviders?serviceCategoryId=...&startDate=...
-      final startDateUtc = requestedDateTime.toUtc().toIso8601String();
+      final startDateUtc = requestedDateTime!.toUtc().toIso8601String();
       final encodedStartDate = Uri.encodeQueryComponent(startDateUtc);
 
       final response = await ApiService().getAuthenticated(
@@ -72,15 +75,13 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
             _isLoading = false;
           });
         } catch (jsonError) {
-          print("JSON decode error: $jsonError");
           setState(() {
             _error = 'Failed to parse provider data: ${jsonError.toString()}';
             _isLoading = false;
           });
         }
       } else {
-        print("Response status: ${response.statusCode}");
-        print("Response body: ${response.body}");
+     
         try {
           final errorBody = jsonDecode(response.body);
           setState(() {
@@ -95,8 +96,6 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
         }
       }
     } catch (e, stackTrace) {
-      print("Exception in _loadAvailableProviders: $e");
-      print("Stack trace: $stackTrace");
       setState(() {
         _error = 'Error loading providers: ${e.toString()}';
         _isLoading = false;

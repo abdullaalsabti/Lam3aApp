@@ -12,12 +12,9 @@ final clientHomeProvider = FutureProvider<ClientHomeData>((ref) async {
       final data = jsonDecode(response.body);
       return ClientHomeData.fromJson(data);
     } else {
-      print('Failed to load home data: Status ${response.statusCode}');
       throw Exception('Failed to load home data: ${response.statusCode}');
     }
   } catch (e, stackTrace) {
-    print('Error loading home data: $e');
-    print('Stack trace: $stackTrace');
     throw Exception('Error loading home data: $e');
   }
 });

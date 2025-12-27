@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lamaa/providers/client_serviceRequest_provider.dart';
 import '../../providers/client_home_provider.dart';
 import '../../models/client_home.dart';
 import '../../models/vehicle.dart';
@@ -109,7 +110,7 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
                     itemCount: homeData.services.length > 3 ? 3 : homeData.services.length,
                     itemBuilder: (context, index) {
                       final service = homeData.services[index];
-                      return _ServiceCard(service: service);
+                      return _ServiceCard(service: service , ref: ref,);
                     },
                   ),
                 ),
@@ -403,24 +404,17 @@ class _Lam3aPointsBanner extends StatelessWidget {
 class _ServiceCard extends StatelessWidget {
   final ServiceCategory service;
 
-  const _ServiceCard({required this.service});
+  const _ServiceCard({required this.service , required this.ref});
+  final WidgetRef ref;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Debug: Verify category id and name are available
-        print('Service Category - ID: ${service.id}, Name: ${service.name}');
-        if (service.id.isEmpty) {
-          print('WARNING: Service category ID is empty!');
-        }
-        if (service.name.isEmpty) {
-          print('WARNING: Service category name is empty!');
-        }
+        ref.read(serviceRequestProvider.notifier).setCategory(service);
         Navigator.pushNamed(
           context,
-          '/date_time_selection',
-          arguments: service,
+          '/date_time_selection'
         );
       },
       child: Container(
