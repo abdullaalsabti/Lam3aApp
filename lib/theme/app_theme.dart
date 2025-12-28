@@ -11,6 +11,14 @@ class AppTheme {
     textTheme: AppTextStyles.lightTextTheme,
     inputDecorationTheme: inputDecorationThemeLight,
     elevatedButtonTheme: elevatedButtonThemeLight,
+    appBarTheme: const AppBarTheme(
+      iconTheme: IconThemeData(
+        color: Colors.white, // White back button and icons
+      ),
+      actionsIconTheme: IconThemeData(
+        color: Colors.white, // White action icons
+      ),
+    ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
       type: BottomNavigationBarType.fixed,
       backgroundColor: Colors.white,

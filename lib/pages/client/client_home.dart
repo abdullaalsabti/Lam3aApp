@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lamaa/pages/client/all_services.dart';
 import 'package:lamaa/providers/client_serviceRequest_provider.dart';
 import '../../providers/client_home_provider.dart';
 import '../../models/client_home.dart';
@@ -69,7 +70,7 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
                 ),
 
                 // Lam3a Points Banner
-                _Lam3aPointsBanner(),
+                _Lam3aPointsBanner(scheme: scheme,),
 
                 const SizedBox(height: 24),
 
@@ -88,7 +89,7 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/service_selection');
+                          Navigator.of(context).push(MaterialPageRoute(builder: (builder)=> AllServices(services: homeData.services)));
                         },
                         child: Text(
                           'see all →',
@@ -110,7 +111,7 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
                     itemCount: homeData.services.length > 3 ? 3 : homeData.services.length,
                     itemBuilder: (context, index) {
                       final service = homeData.services[index];
-                      return _ServiceCard(service: service , ref: ref,);
+                      return _ServiceCard(service: service , ref: ref,scheme:  scheme,);
                     },
                   ),
                 ),
@@ -363,8 +364,12 @@ class _VehicleSelector extends StatelessWidget {
 }
 
 class _Lam3aPointsBanner extends StatelessWidget {
+  _Lam3aPointsBanner({required this.scheme});
+
+   ColorScheme scheme;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context ) {
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -388,13 +393,13 @@ class _Lam3aPointsBanner extends StatelessWidget {
                   style: GoogleFonts.poppins(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF23918C),
+                    color: scheme.primary,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.card_giftcard, size: 60, color: Color(0xFF23918C)),
+          const Icon(Icons.card_giftcard, size: 60, color: Colors.blue),
         ],
       ),
     );
@@ -404,8 +409,9 @@ class _Lam3aPointsBanner extends StatelessWidget {
 class _ServiceCard extends StatelessWidget {
   final ServiceCategory service;
 
-  const _ServiceCard({required this.service , required this.ref});
+   _ServiceCard({required this.service , required this.ref , required this.scheme});
   final WidgetRef ref;
+  ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +425,7 @@ class _ServiceCard extends StatelessWidget {
       },
       child: Container(
         width: 120,
-        margin: const EdgeInsets.only(right: 12),
+        margin:  EdgeInsets.only(right: 12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
@@ -427,14 +433,14 @@ class _ServiceCard extends StatelessWidget {
             BoxShadow(
               color: Colors.grey.shade200,
               blurRadius: 4,
-              offset: const Offset(0, 2),
+              offset:  Offset(0, 2),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.local_car_wash, size: 60, color: Colors.blue),
+             Icon(Icons.local_car_wash, size: 60, color: scheme.primary),
             const SizedBox(height: 8),
             Text(
               service.name,

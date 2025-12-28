@@ -23,7 +23,7 @@ class ClientHomeData {
       serviceProviders: ((json['ServiceProviders'] ?? json['serviceProviders']) as List? ?? [])
           .map((p) => PopularProvider.fromJson(p))
           .toList(),
-      services: ((json['Services'] ?? json['services']) as List? ?? [])
+      services: ( json['services'] as List? ?? [])
           .map((s) {
             // Debug: Print raw service data to verify structure
             print('Raw service data: $s');

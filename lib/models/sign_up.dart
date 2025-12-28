@@ -1,6 +1,5 @@
 import 'package:lamaa/enums/role.dart';
 import 'package:lamaa/enums/gender.dart';
-import 'package:lamaa/enums/services.dart';
 import 'package:lamaa/models/provider_service.dart';
 import 'package:uuid/uuid.dart';
 

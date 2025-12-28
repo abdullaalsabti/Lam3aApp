@@ -5,14 +5,12 @@ import 'package:intl/intl.dart';
 import 'package:lamaa/models/address.dart';
 import 'package:lamaa/models/service_request.dart';
 import 'package:lamaa/providers/client_serviceRequest_provider.dart';
-import 'package:lamaa/providers/service_categories_provider.dart';
-import 'package:lamaa/widgets/location_map_card.dart';
 import 'dart:convert';
-import '../../models/service_category.dart';
 import '../../models/vehicle.dart';
 import '../../providers/vehicles_provider.dart';
 import '../../enums/payment_method.dart';
 import '../../widgets/address_bottom_sheet.dart';
+import '../../widgets/address_selection_card.dart';
 import '../../services/api_service.dart';
 
 class DateTimeSelectionPage extends ConsumerStatefulWidget {
@@ -29,10 +27,8 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
   TimeOfDay? _selectedTime;
   Vehicle? _selectedVehicle;
   Address? clientAddress;
-  String _selectedAddress = '';
   PaymentMethod _selectedPaymentMethod = PaymentMethod.cash;
   bool _isSubmitting = false;
-  String? _addressId; // Will store the address ID from client profile
   final API_KEY = "AIzaSyByCDOzdRCx0cJhxim3I-d8p0wm2--705Q";
   bool loading = false;
 
@@ -95,13 +91,22 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
     }
   }
 
-  // void _showAddressSheet() {
-  //   showAddressBottomSheet(context, (address) {
-  //     setState(() {
-  //       _selectedAddress = address;
-  //     });
-  //   });
-  // }
+  void _showAddressSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      builder: (context) => AddressBottomSheet(
+        onAddressSaved: (address) {
+          setState(() {
+            clientAddress = address;
+          });
+          // Optionally reload address from API if needed
+          _loadClientAddress();
+        },
+      ),
+    );
+  }
 
   void _proceedToProviderSelection() {
     if (!_formKey.currentState!.validate()) {
@@ -122,7 +127,7 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
       return;
     }
 
-    if (_selectedAddress.isEmpty) {
+    if (clientAddress == null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please enter an address')));
@@ -172,41 +177,11 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               //------------------------------ Address Section ----------------------------
-              ClipRRect(
-                borderRadius: BorderRadius.circular(15),
-                child: LocationMapCard(
-                  latitude: clientAddress?.latitude,
-                  longitude: clientAddress?.longitude,
-                  loading: loading,
-                  apiKey: API_KEY,
-                ),
-              ),
-              Text(
-                'Pick-up Address',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                readOnly: true,
-                controller: TextEditingController(
-                  text: clientAddress!.streetName,
-                ),
-                decoration: InputDecoration(
-                  suffixIcon: const Icon(Icons.location_on),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onTap: () {},
-                validator: (value) {
-                  if (_selectedAddress.isEmpty) {
-                    return 'Address is required';
-                  }
-                  return null;
-                },
+              AddressSelectionCard(
+                clientAddress: clientAddress,
+                loading: loading,
+                apiKey: API_KEY,
+                onEdit: _showAddressSheet,
               ),
               const SizedBox(height: 24),
 
@@ -283,7 +258,9 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
                                 Text(
                                   _selectedVehicle == null
                                       ? 'Choose your vehicle'
-                                      : "${_selectedVehicle!.plateNumber}, ${_selectedVehicle!.color ?? ''}",
+                                      : _selectedVehicle!.color.isNotEmpty
+                                          ? "${_selectedVehicle!.plateNumber}, ${_selectedVehicle!.color}"
+                                          : _selectedVehicle!.plateNumber,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
