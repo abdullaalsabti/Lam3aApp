@@ -1,7 +1,6 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:lamaa/enums/payment_method.dart';
-import 'package:lamaa/models/client_home.dart';
+import 'package:lamaa/models/address.dart';
 import 'package:lamaa/models/service_category.dart';
 import 'package:lamaa/models/service_request.dart';
 
@@ -14,11 +13,10 @@ class ServiceRequestNotifier
   void mergeServiceRequest(ClientServiceRequest request) {
   state = state.copyWith(
     carPlateNumber: request.carPlateNumber,
-    clientId: request.clientId,
     providerId: request.providerId,
     category: request.category,
     pickUpTime: request.pickUpTime,
-    coordinates: request.coordinates,
+    address: request.address,
     paymentMethod: request.paymentMethod,
   );
 }
@@ -27,8 +25,8 @@ class ServiceRequestNotifier
     state = state.copyWith(carPlateNumber: plateNumber);
   }
 
-  void setClient(String clientId) {
-    state = state.copyWith(clientId: clientId);
+  void setAddress(Address address) {
+    state = state.copyWith(address: address);
   }
 
   void setProvider(String providerId) {
@@ -41,10 +39,6 @@ class ServiceRequestNotifier
 
   void setPickUpTime(DateTime pickUpTime) {
     state = state.copyWith(pickUpTime: pickUpTime);
-  }
-
-  void setCoordinates(CoordinatesData coordinates) {
-    state = state.copyWith(coordinates: coordinates);
   }
 
   void setPaymentMethod(PaymentMethod method) {

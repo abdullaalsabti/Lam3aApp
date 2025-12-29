@@ -37,165 +37,110 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
             });
           }
 
-          return SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Section - Location and Vehicle Selectors
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    children: [
-                      // Location Selector
-                      Expanded(
-                        child: _LocationSelector(
-                          address: homeData.address.fullAddress,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Vehicle Selector
-                      Expanded(
-                        child: _VehicleSelector(
-                          vehicles: homeData.vehicles,
-                          selectedVehicle: _selectedVehicle,
-                          onVehicleSelected: (vehicle) {
-                            setState(() {
-                              _selectedVehicle = vehicle;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Lam3a Points Banner
-                _Lam3aPointsBanner(scheme: scheme,),
-
-                const SizedBox(height: 24),
-
-                // Popular Services Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Popular Services',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).push(MaterialPageRoute(builder: (builder)=> AllServices(services: homeData.services)));
-                        },
-                        child: Text(
-                          'see all →',
+          return SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: 15,),
+                  // Lam3a Points Banner
+                  _Lam3aPointsBanner(scheme: scheme,),
+            
+                  const SizedBox(height: 24),
+            
+                  // Popular Services Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Popular Services',
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: scheme.primary,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 150,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: homeData.services.length > 3 ? 3 : homeData.services.length,
-                    itemBuilder: (context, index) {
-                      final service = homeData.services[index];
-                      return _ServiceCard(service: service , ref: ref,scheme:  scheme,);
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Popular Providers Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Popular Providers',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          // TODO: Navigate to all providers page when implemented
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Providers page coming soon!')),
-                          );
-                        },
-                        child: Text(
-                          'see all →',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: scheme.primary,
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(builder: (builder)=> AllServices(services: homeData.services)));
+                          },
+                          child: Text(
+                            'see all →',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: scheme.primary,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 180,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: homeData.serviceProviders.length > 2 ? 2 : homeData.serviceProviders.length,
-                    itemBuilder: (context, index) {
-                      final provider = homeData.serviceProviders[index];
-                      return _ProviderCard(provider: provider);
-                    },
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 150,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: homeData.services.length > 5 ? 5 : homeData.services.length,
+                      itemBuilder: (context, index) {
+                        final service = homeData.services[index];
+                        return _ServiceCard(service: service , ref: ref,scheme:  scheme,);
+                      },
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // Promotional Cards
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _PromotionalCard(
-                          title: 'Enjoyed the service last time?',
-                          actionText: 'Book Again',
-                          onTap: () {
-                            // Navigate to recent bookings or service selection
-                            Navigator.pushNamed(context, '/client_requests');
-                          },
+            
+                  const SizedBox(height: 24),
+            
+                  // Popular Providers Section
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Popular Providers',
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _PromotionalCard(
-                          title: 'Try something new\nWe won\'t disappoint',
-                          actionText: 'Check It Out',
-                          onTap: () {
-                            Navigator.pushNamed(context, '/service_selection');
+                        TextButton(
+                          onPressed: () {
+                            // TODO: Navigate to all providers page when implemented
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Providers page coming soon!')),
+                            );
                           },
+                          child: Text(
+                            'see all →',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: scheme.primary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-
-                const SizedBox(height: 24),
-              ],
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: homeData.serviceProviders.length > 5 ? 5 : homeData.serviceProviders.length,
+                      itemBuilder: (context, index) {
+                        final provider = homeData.serviceProviders[index];
+                        return _ProviderCard(provider: provider);
+                      },
+                    ),
+                  ),
+            
+            
+                
+                ],
+              ),
             ),
           );
         },
@@ -532,52 +477,6 @@ class _ProviderCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PromotionalCard extends StatelessWidget {
-  final String title;
-  final String actionText;
-  final VoidCallback onTap;
-
-  const _PromotionalCard({
-    required this.title,
-    required this.actionText,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFE0F7FA),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade700),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              actionText,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF23918C),
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Icon(Icons.local_car_wash, size: 40, color: Color(0xFF23918C)),
-          ],
-        ),
       ),
     );
   }

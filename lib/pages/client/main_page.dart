@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lamaa/pages/client/Profile.dart';
 import 'package:lamaa/pages/client/client_home.dart';
 import 'package:lamaa/pages/client/garage_page.dart';
+import 'package:lamaa/widgets/order_summary/success_confirmation_dialog.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -12,12 +13,39 @@ class MainPage extends StatefulWidget {
 
 class _MainPageState extends State<MainPage> {
     int _currentIndex = 0;
+  bool _hasShownSuccessDialog = false;
 
   final List<Widget> _screens = [
     ClientHomePage(),
     GaragePage(),
     ProfileScreen(),
   ];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Check if we should show success dialog from route arguments
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map && args['showSuccessDialog'] == true && !_hasShownSuccessDialog) {
+      _hasShownSuccessDialog = true;
+      // Wait for the page to fully build, then show dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _showSuccessDialog();
+        }
+      });
+    }
+  }
+
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const SuccessConfirmationDialog(
+        countdownSeconds: 4,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -27,8 +27,8 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
   String? errorMessage;
 
   String get locationImage {
-    final lat = _address!.latitude;
-    final lng = _address!.longitude;
+    final lat = _address!.coordinates?.latitude;
+    final lng = _address!.coordinates?.longitude;
     return 'https://maps.googleapis.com/maps/api/staticmap'
         '?center=$lat,$lng'
         '&zoom=16'
@@ -41,8 +41,9 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
   void onPressed() {
     // Validate that coordinates are present (user must use "get current location")
     if (_address == null ||
-        _address!.latitude == null ||
-        _address!.longitude == null) {
+        _address!.coordinates == null ||
+        _address!.coordinates!.latitude == null ||
+        _address!.coordinates!.longitude == null) {
       setState(() {
         errorMessage = 'please put your location first';
       });
@@ -163,8 +164,10 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
 
       setState(() {
         _address = Address(
-          latitude: location.latitude,
-          longitude: location.longitude,
+          coordinates: Coordinates(
+            latitude: location.latitude,
+            longitude: location.longitude,
+          ),
           address: formattedAddress,
           streetName: streetName,
         );
@@ -186,9 +189,9 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
   Widget build(BuildContext context) {
     Widget locationPreview = ClipRRect(
       borderRadius: BorderRadius.circular(15),
-      child: LocationMapCard(
-        latitude: _address?.latitude,
-        longitude: _address?.longitude,
+                child: LocationMapCard(
+        latitude: _address?.coordinates?.latitude,
+        longitude: _address?.coordinates?.longitude,
         loading: loadingLocation,
         apiKey: API_KEY,
       ),

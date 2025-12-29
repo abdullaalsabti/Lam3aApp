@@ -101,8 +101,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
         lNameController.text.isEmpty ||
         selectedDate == null ||
         selectedAddress == null ||
-        selectedAddress!.latitude == null ||
-        selectedAddress!.longitude == null ||
+        selectedAddress!.coordinates == null ||
         selectedAddress!.streetName == null ||
         selectedAddress!.streetName!.isEmpty ||
         selectedAddress!.houseNumber == null) {
@@ -141,10 +140,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
           'street': address.streetName ?? '',
           'buildingNumber': address.houseNumber?.toString() ?? '',
           'landmark': address.landmark?.trim() ?? '', // Optional, can be empty string
-          'coordinates': {
-            'latitude': address.latitude!,
-            'longitude': address.longitude!,
-          },
+          'coordinates': address.coordinates!.toJson(),
         },
       };
 
@@ -392,8 +388,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
                           ),
                           validator: (value) {
                             if (selectedAddress == null ||
-                                selectedAddress!.latitude == null ||
-                                selectedAddress!.longitude == null) {
+                                selectedAddress!.coordinates == null) {
                               return 'Please select your address';
                             }
                             return null;

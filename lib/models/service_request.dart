@@ -1,47 +1,60 @@
-import 'package:lamaa/models/client_home.dart';
+import 'package:lamaa/models/address.dart';
 
 import '../enums/service_status.dart';
 import '../enums/payment_method.dart';
 import 'service_category.dart';
 
+// Import Coordinates from address.dart
+import 'address.dart' show Coordinates;
 
 class ClientServiceRequest {
   final String? carPlateNumber;
-  final String? clientId;
+
   final String? providerId;
   final ServiceCategory? category;
   final DateTime? pickUpTime;
-  final CoordinatesData? coordinates;
+  final Address? address;
   final PaymentMethod? paymentMethod;
 
   const ClientServiceRequest({
     this.carPlateNumber,
-    this.clientId,
     this.providerId,
     this.category,
     this.pickUpTime,
-    this.coordinates,
+    this.address,
     this.paymentMethod,
   });
 
   ClientServiceRequest copyWith({
     String? carPlateNumber,
-    String? clientId,
     String? providerId,
     ServiceCategory? category,
     DateTime? pickUpTime,
-    CoordinatesData? coordinates,
+    Address? address,
     PaymentMethod? paymentMethod,
   }) {
     return ClientServiceRequest(
       carPlateNumber: carPlateNumber ?? this.carPlateNumber,
-      clientId: clientId ?? this.clientId,
       providerId: providerId ?? this.providerId,
       category: category ?? this.category,
       pickUpTime: pickUpTime ?? this.pickUpTime,
-      coordinates: coordinates ?? this.coordinates,
+      address: address ?? this.address,
       paymentMethod: paymentMethod ?? this.paymentMethod,
     );
+  }
+
+  @override
+  String toString() {
+    return '''
+ClientServiceRequest(
+  carPlateNumber: $carPlateNumber,
+  providerId: $providerId,
+  category: ${category?.name ?? 'N/A'},
+  pickUpTime: ${pickUpTime?.toIso8601String() ?? 'N/A'},
+  coordinates: ${address != null ? '(${address!.houseNumber}, ${address!.coordinates?.latitude} , ${address!.coordinates?.longitude})' : 'N/A'},
+  paymentMethod: ${paymentMethod?.name ?? 'N/A'}
+)
+''';
   }
 }
 
@@ -77,22 +90,54 @@ class ServiceRequest {
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
     return ServiceRequest(
       id: json['Id']?.toString() ?? json['id']?.toString() ?? '',
-      vehiclePlateNumber: json['VehiclePlateNumber'] ?? json['vehiclePlateNumber'] ?? '',
-      requestedDateTime: DateTime.parse(json['RequestedDateTime'] ?? json['requestedDateTime'] ?? DateTime.now().toIso8601String()),
-      paymentMethod: PaymentMethod.fromString(json['PaymentMethod']?.toString() ?? json['paymentMethod']?.toString() ?? 'Cash'),
-      status: ServiceStatus.fromString(json['Status']?.toString() ?? json['status']?.toString() ?? 'OrderPlaced'),
-      serviceProviderId: json['ServiceProviderId']?.toString() ?? json['serviceProviderId']?.toString() ?? '',
-      serviceId: json['ServiceId']?.toString() ?? json['serviceId']?.toString() ?? '',
-      category: json['Category'] != null ? ServiceCategory.fromJson(json['Category']) : 
-                json['category'] != null ? ServiceCategory.fromJson(json['category']) : null,
-      provider: json['Provider'] != null ? ProviderInfo.fromJson(json['Provider']) :
-                json['provider'] != null ? ProviderInfo.fromJson(json['provider']) : null,
-      vehicle: json['Vehicle'] != null ? VehicleInfo.fromJson(json['Vehicle']) :
-              json['vehicle'] != null ? VehicleInfo.fromJson(json['vehicle']) : null,
-      address: json['Address'] != null ? AddressInfo.fromJson(json['Address']) :
-              json['address'] != null ? AddressInfo.fromJson(json['address']) : null,
-      service: json['Service'] != null ? ServiceInfo.fromJson(json['Service']) :
-              json['service'] != null ? ServiceInfo.fromJson(json['service']) : null,
+      vehiclePlateNumber:
+          json['VehiclePlateNumber'] ?? json['vehiclePlateNumber'] ?? '',
+      requestedDateTime: DateTime.parse(
+        json['RequestedDateTime'] ??
+            json['requestedDateTime'] ??
+            DateTime.now().toIso8601String(),
+      ),
+      paymentMethod: PaymentMethod.fromString(
+        json['PaymentMethod']?.toString() ??
+            json['paymentMethod']?.toString() ??
+            'Cash',
+      ),
+      status: ServiceStatus.fromString(
+        json['Status']?.toString() ??
+            json['status']?.toString() ??
+            'OrderPlaced',
+      ),
+      serviceProviderId:
+          json['ServiceProviderId']?.toString() ??
+          json['serviceProviderId']?.toString() ??
+          '',
+      serviceId:
+          json['ServiceId']?.toString() ?? json['serviceId']?.toString() ?? '',
+      category: json['Category'] != null
+          ? ServiceCategory.fromJson(json['Category'])
+          : json['category'] != null
+          ? ServiceCategory.fromJson(json['category'])
+          : null,
+      provider: json['Provider'] != null
+          ? ProviderInfo.fromJson(json['Provider'])
+          : json['provider'] != null
+          ? ProviderInfo.fromJson(json['provider'])
+          : null,
+      vehicle: json['Vehicle'] != null
+          ? VehicleInfo.fromJson(json['Vehicle'])
+          : json['vehicle'] != null
+          ? VehicleInfo.fromJson(json['vehicle'])
+          : null,
+      address: json['Address'] != null
+          ? AddressInfo.fromJson(json['Address'])
+          : json['address'] != null
+          ? AddressInfo.fromJson(json['address'])
+          : null,
+      service: json['Service'] != null
+          ? ServiceInfo.fromJson(json['Service'])
+          : json['service'] != null
+          ? ServiceInfo.fromJson(json['service'])
+          : null,
     );
   }
 
@@ -190,24 +235,28 @@ class AddressInfo {
   final String street;
   final String buildingNumber;
   final String landmark;
-  final double latitude;
-  final double longitude;
+  final Coordinates coordinates;
 
   AddressInfo({
     required this.street,
     required this.buildingNumber,
     required this.landmark,
-    required this.latitude,
-    required this.longitude,
+    required this.coordinates,
   });
+
+  // Convenience getters for backward compatibility
+  double get latitude => coordinates.latitude;
+  double get longitude => coordinates.longitude;
 
   factory AddressInfo.fromJson(Map<String, dynamic> json) {
     return AddressInfo(
       street: json['Street'] ?? json['street'] ?? '',
       buildingNumber: json['BuildingNumber'] ?? json['buildingNumber'] ?? '',
       landmark: json['Landmark'] ?? json['landmark'] ?? '',
-      latitude: (json['Latitude'] ?? json['latitude'] ?? 0).toDouble(),
-      longitude: (json['Longitude'] ?? json['longitude'] ?? 0).toDouble(),
+      coordinates: Coordinates.fromJson(json['Coordinates'] ?? json['coordinates'] ?? {
+        'Latitude': json['Latitude'] ?? json['latitude'] ?? 0,
+        'Longitude': json['Longitude'] ?? json['longitude'] ?? 0,
+      }),
     );
   }
 
@@ -216,8 +265,7 @@ class AddressInfo {
       'street': street,
       'buildingNumber': buildingNumber,
       'landmark': landmark,
-      'latitude': latitude,
-      'longitude': longitude,
+      'Coordinates': coordinates.toJson(),
     };
   }
 }

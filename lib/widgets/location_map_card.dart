@@ -54,6 +54,19 @@ class _LocationMapCardState extends State<LocationMapCard> {
           height: 160,
           width: double.infinity,
           fit: BoxFit.cover,
+          // Add a key to force rebuild when coordinates change
+          key: ValueKey('${widget.latitude}_${widget.longitude}'),
+          // Add error handling
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 160,
+              width: double.infinity,
+              color: Colors.grey[200],
+              child: const Center(
+                child: Icon(Icons.error_outline, color: Colors.red),
+              ),
+            );
+          },
         ),
       );
     }

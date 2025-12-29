@@ -132,11 +132,13 @@ class AddressSelectionCard extends StatelessWidget {
                           child: CircularProgressIndicator(),
                         ),
                       )
-                    : clientAddress?.latitude != null &&
-                            clientAddress?.longitude != null
+                    : clientAddress?.coordinates != null &&
+                            clientAddress?.coordinates?.latitude != null &&
+                            clientAddress?.coordinates?.longitude != null
                         ? LocationMapCard(
-                            latitude: clientAddress?.latitude,
-                            longitude: clientAddress?.longitude,
+                            key: ValueKey('${clientAddress?.coordinates?.latitude}_${clientAddress?.coordinates?.longitude}'),
+                            latitude: clientAddress?.coordinates?.latitude,
+                            longitude: clientAddress?.coordinates?.longitude,
                             loading: false,
                             apiKey: apiKey,
                           )

@@ -8,6 +8,7 @@ import 'package:lamaa/providers/providerServices_provider.dart';
 import 'package:lamaa/providers/service_requests_provider.dart';
 import 'package:lamaa/providers/sign_up_providers.dart';
 import 'package:lamaa/providers/vehicles_provider.dart';
+import 'package:lamaa/services/api_provider_services.dart';
 import 'package:lamaa/services/api_service.dart';
 
 /// Service class for handling authentication business logic
@@ -164,6 +165,7 @@ class AuthService {
       );
     }
   }
+
 
   /// Clear cached data based on role
   void _clearCachedData(Role role, WidgetRef ref) {

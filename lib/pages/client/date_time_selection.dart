@@ -53,6 +53,7 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
           response.body,
         ); // assuming your ApiService returns already decoded JSON
         clientAddress = Address.fromJson(data);
+ 
       }
     } catch (e) {
       print('Error loading client address: $e');
@@ -101,11 +102,11 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
           setState(() {
             clientAddress = address;
           });
-          // Optionally reload address from API if needed
-          _loadClientAddress();
+          // Don't reload from API - use the edited address directly
         },
       ),
     );
+
   }
 
   void _proceedToProviderSelection() {
@@ -145,6 +146,8 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
     final request = ClientServiceRequest(
       carPlateNumber: _selectedVehicle!.plateNumber,
       pickUpTime: requestedDateTime,
+      address: clientAddress!,
+      paymentMethod: _selectedPaymentMethod,
     );
     ref.read(serviceRequestProvider.notifier).mergeServiceRequest(request);
     // Navigate to provider selection with all data
@@ -280,7 +283,7 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
                     ),
                   );
 
-                  //old select a car
+             
                 },
                 loading: () => const CircularProgressIndicator(),
                 error: (error, stack) => Text('Error loading vehicles: $error'),

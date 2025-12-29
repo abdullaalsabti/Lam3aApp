@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/models/service_request.dart';
+import 'package:lamaa/pages/client/service_request_submit.dart';
 import 'package:lamaa/providers/client_serviceRequest_provider.dart';
 import 'dart:convert';
 import '../../models/service_category.dart';
@@ -53,16 +54,13 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
       );
 
       if (response.statusCode == 200) {
-        print("response 200 ${response.body}");
         try {
           final List<dynamic> data = jsonDecode(response.body);
-          print("Parsed ${data.length} providers");
           
           final providers = <ProviderServiceInfo>[];
           for (var i = 0; i < data.length; i++) {
             try {
               final provider = ProviderServiceInfo.fromJson(data[i]);
-              print("Provider $i: ${provider.name} (ID: ${provider.serviceProviderId})");
               providers.add(provider);
             } catch (parseError) {
               print("Error parsing provider $i: $parseError");
@@ -76,7 +74,6 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
           });
         } catch (jsonError) {
           setState(() {
-            _error = 'Failed to parse provider data: ${jsonError.toString()}';
             _isLoading = false;
           });
         }
@@ -214,12 +211,8 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
                             onSelect: () {
                               // TODO: Implement service request creation
                               // Backend ServiceRequestController is currently empty
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Service request creation coming soon!'),
-                                  backgroundColor: Colors.orange,
-                                ),
-                              );
+                              ref.watch(serviceRequestProvider.notifier).setProvider(provider.serviceProviderId);
+                              Navigator.of(context).push(MaterialPageRoute(builder: (builder)=>ServiceRequestSubmit() ));
                             },
                           );
                         },
