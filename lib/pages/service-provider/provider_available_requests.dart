@@ -40,7 +40,7 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       // Backend uses ProviderOrderController:
       // GET /api/provider/ProviderOrder/getOrders?status=Pending
       final response = await ApiService().getAuthenticated(
-        'api/provider/ProviderOrder/getOrders?status=Pending',
+        'provider/ProviderOrder/getOrders?status=Pending',
       );
 
       if (response.statusCode == 200) {
@@ -67,7 +67,7 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
     try {
       // Backend: PUT /api/provider/ProviderOrder/{requestId}/accept
       final response = await ApiService().putAuthenticated(
-        'api/provider/ProviderOrder/$requestId/accept',
+        'provider/ProviderOrder/$requestId/accept',
         {},
       );
 
@@ -105,7 +105,7 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       // Backend: PUT /api/provider/ProviderOrder/{requestId}/reject
       // Body: { reason?: string }
       final response = await ApiService().putAuthenticated(
-        'api/provider/ProviderOrder/$requestId/reject',
+        'provider/ProviderOrder/$requestId/reject',
         {'reason': null},
       );
 
@@ -145,7 +145,7 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
 
     try {
       final response = await ApiService().getAuthenticated(
-        'api/provider/ProviderProfile/availability',
+        'provider/ProviderProfile/availability',
       );
 
       if (response.statusCode == 200) {
@@ -193,7 +193,7 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
 
     try {
       // ASP.NET Core binds simple types from query string by default
-      final endpoint = 'api/provider/ProviderProfile/availability?availability=$availability';
+      final endpoint = 'provider/ProviderProfile/availability?availability=$availability';
       final response = await ApiService().patchAuthenticated(
         endpoint,
         {},

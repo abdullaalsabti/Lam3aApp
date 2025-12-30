@@ -30,7 +30,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     });
 
     try {
-      final response = await ApiService().getAuthenticated('api/client/ClientProfile/getProfile');
+      final response = await ApiService().getAuthenticated('client/ClientProfile/getProfile');
       
       if (response.statusCode == 200) {
         setState(() {

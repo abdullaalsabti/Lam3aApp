@@ -56,7 +56,7 @@ class GaragePage extends ConsumerWidget {
   Future<void> _deleteVehicle( BuildContext context, WidgetRef ref, String plateNumber,) async {
     try {
       final response = await ApiService().deleteAuthenticated(
-        'api/client/Vehicle/$plateNumber',
+        'client/Vehicle/$plateNumber',
       );
 
       if (response.statusCode == 200) {

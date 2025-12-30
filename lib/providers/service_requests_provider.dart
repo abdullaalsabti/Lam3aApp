@@ -7,7 +7,7 @@ import '../services/api_service.dart';
 // Provider to fetch and cache service requests from backend
 final serviceRequestsProvider = FutureProvider.family<List<ServiceRequest>, ServiceStatus?>((ref, status) async {
   try {
-    String endpoint = 'api/client/ServiceRequest/getRequests';
+    String endpoint = 'client/ServiceRequest/getRequests';
     if (status != null) {
       endpoint += '?status=${status.name}';
     }

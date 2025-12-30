@@ -68,7 +68,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _navigateToHome(ApiService apiService) async {
     try {
       // Try to get user profile to determine role
-      final response = await apiService.getAuthenticated('api/client/ClientProfile/getProfile');
+      final response = await apiService.getAuthenticated('client/ClientProfile/getProfile');
       
       if (response.statusCode == 200) {
         // User is a client
@@ -86,7 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     try {
-      final response = await apiService.getAuthenticated('api/provider/ProviderProfile/getProfile');
+      final response = await apiService.getAuthenticated('provider/ProviderProfile/getProfile');
       
       if (response.statusCode == 200) {
         // User is a provider

@@ -26,7 +26,7 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _estTimeController = TextEditingController();
   final TextEditingController _servDescController = TextEditingController();
-  static const baseEndpoint = "api/provider/services";
+  static const baseEndpoint = "provider/services";
 
   String? categoryId;
   var apiService = ApiService();
@@ -114,7 +114,7 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
 
   void _addService(ProviderService service) async {
     try {
-      String postServiceEndpoint = "api/provider/services";
+      String postServiceEndpoint = "provider/services";
       Response res = await apiService.postAuthenticated(
         postServiceEndpoint,
         service.toJson(),

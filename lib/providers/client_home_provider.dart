@@ -6,10 +6,12 @@ import '../services/api_service.dart';
 // Provider to fetch and cache client home data
 final clientHomeProvider = FutureProvider<ClientHomeData>((ref) async {
   try {
-    final response = await ApiService().getAuthenticated('api/client/Home');
+    final response = await ApiService().getAuthenticated('client/Home');
     
     if (response.statusCode == 200) {
+      print("response is ${response.body}");
       final data = jsonDecode(response.body);
+      print("data is ${data}");
       return ClientHomeData.fromJson(data);
     } else {
       throw Exception('Failed to load home data: ${response.statusCode}');

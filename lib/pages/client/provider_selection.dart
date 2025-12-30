@@ -50,7 +50,7 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
       final encodedStartDate = Uri.encodeQueryComponent(startDateUtc);
 
       final response = await ApiService().getAuthenticated(
-        'api/client/AvailableProviders?serviceCategoryId=${category.id}&startDate=$encodedStartDate',
+        'client/AvailableProviders?serviceCategoryId=${category.id}&startDate=$encodedStartDate',
       );
 
       if (response.statusCode == 200) {

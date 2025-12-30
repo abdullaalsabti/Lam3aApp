@@ -7,10 +7,8 @@ class ClientHomeData {
   final Address address;
   final List<PopularProvider> serviceProviders;
   final List<ServiceCategory> services;
-  final String clientId;
-
+ 
   ClientHomeData({
-    required this.clientId,
     required this.vehicles,
     required this.address,
     required this.serviceProviders,
@@ -19,7 +17,6 @@ class ClientHomeData {
 
   factory ClientHomeData.fromJson(Map<String, dynamic> json) {
     return ClientHomeData(
-      clientId: (json["clientId"] as String),
       vehicles: ((json['Vehicles'] ?? json['vehicles']) as List? ?? [])
           .map((v) => Vehicle.fromJson(v))
           .toList(),

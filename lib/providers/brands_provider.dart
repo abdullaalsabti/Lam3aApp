@@ -7,7 +7,7 @@ import '../dummy_garage_json.dart';
 // Provider to fetch and cache brands from backend
 final brandsProvider = FutureProvider<List<CarBrand>>((ref) async {
   try {
-    final response = await ApiService().get('api/ModelBrand');
+    final response = await ApiService().get('ModelBrand');
     
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);

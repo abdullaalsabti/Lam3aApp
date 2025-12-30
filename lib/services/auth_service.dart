@@ -24,7 +24,7 @@ class AuthService {
   }) async {
     try {
       final response = await _apiService.post(
-        'api/Auth/login',
+        'Auth/login',
         {'email': email, 'password': password},
       );
 
@@ -68,7 +68,7 @@ class AuthService {
   }) async {
     try {
       final response = await _apiService.post(
-        'api/Auth/register',
+        'auth/register',
         {
           'email': email,
           'password': password,
@@ -112,7 +112,7 @@ class AuthService {
       }
 
       final response = await _apiService.post(
-        'api/Auth/login',
+        'Auth/login',
         {'email': loginEmail, 'password': loginPassword},
       );
 
@@ -192,6 +192,7 @@ class AuthService {
 
   /// Get error message based on status code
   String _getStatusCodeMessage(int statusCode) {
+    print(statusCode);
     switch (statusCode) {
       case 401:
         return 'Invalid email or password';

@@ -32,7 +32,7 @@ class _ClientRequestsPageState extends ConsumerState<ClientRequestsPage> with Si
   Future<void> _cancelRequest(String requestId) async {
     try {
       final response = await ApiService().putAuthenticated(
-        'api/client/ServiceRequest/cancel/$requestId',
+        'client/ServiceRequest/cancel/$requestId',
         {},
       );
 

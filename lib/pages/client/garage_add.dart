@@ -107,11 +107,11 @@ class _GarageAddState extends ConsumerState<GarageAdd> {
         final bool isEditing = _originalPlateNumber != null;
         final response = isEditing
             ? await ApiService().putAuthenticated(
-                'api/client/Vehicle/$_originalPlateNumber',
+                'client/Vehicle/$_originalPlateNumber',
                 body,
               )
             : await ApiService().postAuthenticated(
-                'api/client/Vehicle/addVehicle',
+                'client/Vehicle/addVehicle',
                 body,
               );
 

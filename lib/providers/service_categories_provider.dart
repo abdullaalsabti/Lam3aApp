@@ -6,7 +6,7 @@ import '../services/api_service.dart';
 // Provider to fetch and cache service categories from backend
 final serviceCategoriesProvider = FutureProvider<List<ServiceCategory>>((ref) async {
   try {
-    final response = await ApiService().get('api/provider/Services/categories');
+    final response = await ApiService().get('provider/Services/categories');
     
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);

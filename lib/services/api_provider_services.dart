@@ -5,7 +5,7 @@ import 'package:lamaa/models/provider_service.dart';
 import 'package:lamaa/services/api_service.dart';
 import 'package:lamaa/services/custom_exceptions.dart';
 
-String baseEndpoint = "api/provider/services";
+String baseEndpoint = "provider/services";
 var apiService = ApiService();
 Future<List<ProviderService>> getServices()async{
   try{

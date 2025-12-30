@@ -6,7 +6,7 @@ import '../services/api_service.dart';
 // Provider to fetch and cache vehicles from backend
 final vehiclesProvider = FutureProvider<List<Vehicle>>((ref) async {
   try {
-    final response = await ApiService().getAuthenticated('api/client/Vehicle/getVehicles');
+    final response = await ApiService().getAuthenticated('client/Vehicle/getVehicles');
     
     if (response.statusCode == 200) {
       final responseBody = response.body;

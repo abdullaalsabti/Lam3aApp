@@ -46,7 +46,7 @@ class _DateTimeSelectionPageState extends ConsumerState<DateTimeSelectionPage> {
     // Get client profile to get address ID
     try {
       final response = await ApiService().getAuthenticated(
-        'api/client/ClientProfile/getAddress',
+        'client/ClientProfile/getAddress',
       );
       if (response.statusCode == 200) {
         Map<String, dynamic> data = jsonDecode(

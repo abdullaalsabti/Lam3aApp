@@ -29,7 +29,7 @@ class _ProviderProfileScreenState extends ConsumerState<ProviderProfileScreen> {
     });
 
     try {
-      final response = await ApiService().getAuthenticated('api/provider/ProviderProfile');
+      final response = await ApiService().getAuthenticated('provider/ProviderProfile');
       
       if (response.statusCode == 200) {
         setState(() {

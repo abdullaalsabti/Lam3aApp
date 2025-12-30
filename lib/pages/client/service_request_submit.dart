@@ -44,7 +44,7 @@ class _ServiceRequestSubmitState extends ConsumerState<ServiceRequestSubmit> {
       final startDateUtc = request.pickUpTime!.toUtc().toIso8601String();
       final encodedStartDate = Uri.encodeQueryComponent(startDateUtc);
       final response = await ApiService().getAuthenticated(
-        'api/client/AvailableProviders?serviceCategoryId=${request.category!.id}&startDate=$encodedStartDate',
+        'client/AvailableProviders?serviceCategoryId=${request.category!.id}&startDate=$encodedStartDate',
       );
 
       if (response.statusCode == 200) {
@@ -144,7 +144,7 @@ class _ServiceRequestSubmitState extends ConsumerState<ServiceRequestSubmit> {
       };
 
       final response = await ApiService().postAuthenticated(
-        'api/client/ServiceRequest',
+        'client/ServiceRequest',
         requestBody,
       );
 

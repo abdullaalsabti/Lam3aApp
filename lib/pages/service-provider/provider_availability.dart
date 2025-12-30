@@ -38,7 +38,7 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
     });
 
     try {
-      final response = await ApiService().getAuthenticated('api/provider/ProviderProfile/schedule');
+      final response = await ApiService().getAuthenticated('provider/ProviderProfile/schedule');
 
       if (response.statusCode == 200) {
         final body = jsonDecode(response.body);
@@ -216,7 +216,7 @@ class _ProviderAvailabilityPageState extends State<ProviderAvailabilityPage> {
 
     try {
       final response = await ApiService().putAuthenticated(
-        'api/provider/ProviderProfile/schedule',
+        'provider/ProviderProfile/schedule',
         {
           'availability': availabilityPayload,
         },

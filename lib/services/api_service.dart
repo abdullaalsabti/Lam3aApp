@@ -13,7 +13,7 @@ class ApiService {
   /// - Phone over USB (recommended): `http://127.0.0.1:5003` + `adb reverse tcp:5003 tcp:5003`
   /// - Same Wi‑Fi LAN: `http://192.168.1.11:5002` (backend must bind `0.0.0.0:5002`)
   static String get _baseUrl {
-    return 'http://127.0.0.1:5003';
+    return 'https://lam3a-backend.onrender.com/api/';
   }
   
   // Timeout duration for HTTP requests (10 seconds)
@@ -51,7 +51,7 @@ class ApiService {
         return false;
       }
 
-      final url = _getUri('api/Auth/refreshToken');
+      final url = _getUri('Auth/refreshToken');
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
@@ -81,7 +81,7 @@ class ApiService {
   Uri _getUri(String endpoint) {
     var base = _baseUrl;
     if (!base.startsWith('http://') && !base.startsWith('https://')) {
-      base = 'http://$base';
+      base = 'https://$base';
     }
 
     final baseUri = Uri.parse(base.endsWith('/') ? base : '$base/');

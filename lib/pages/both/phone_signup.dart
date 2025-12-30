@@ -79,7 +79,7 @@ class _PhoneSignupState extends ConsumerState<PhoneSignup> {
 
     try {
       // Login with saved email and password to get token
-      var response = await apiService.post("api/Auth/login", {
+      var response = await apiService.post("Auth/login", {
         'email': signupData.email,
         'password': signupData.password,
       });
