@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/services/api_service.dart';
 import 'package:lamaa/providers/vehicles_provider.dart';
+import 'package:lamaa/pages/client/client_personal_info_page.dart';
+import 'package:lamaa/pages/client/client_help_page.dart';
+import 'package:lamaa/pages/client/garage_page.dart';
 import 'dart:convert';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -15,7 +18,6 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Map<String, dynamic>? _profileData;
   bool _isLoading = true;
-  String? _error;
 
   @override
   void initState() {
@@ -24,11 +26,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _loadProfile() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
     try {
       final response = await ApiService().getAuthenticated('client/ClientProfile/getProfile');
       
@@ -39,16 +36,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         });
       } else {
         setState(() {
-          _error = 'Failed to load profile';
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _error = 'Error loading profile: $e';
         _isLoading = false;
       });
     }
+  }
+
+  String _getFullName() {
+    if (_profileData != null) {
+      final firstName = _profileData!['firstName']?.toString() ?? '';
+      final lastName = _profileData!['lastName']?.toString() ?? '';
+      final fullName = '$firstName $lastName'.trim();
+      return fullName.isNotEmpty ? fullName : 'Client';
+    }
+    return 'Client';
   }
 
   Future<void> _handleLogout() async {
@@ -103,239 +108,188 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     }
   }
-    String _formateDateOfBirth(){
-   if(_profileData?["dateOfBirth"]!= null){
-      String date = _profileData?["dateOfBirth"];
-      print(date);
-
-      List<String> datesValues = date.split("-");
-      return "${datesValues[0]}-${datesValues[1]}-${datesValues[2].substring(0,2)}";
-   }
-   return "not set";
-  }
-
-   @override
+  @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: Text(
-          'Profile',
-          style: GoogleFonts.poppins(
-            fontSize: 24,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: scheme.primary,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: Colors.grey.shade400,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _error!,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadProfile,
-                        child: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadProfile,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  // Profile Header Section
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
                       children: [
-                        // Profile Header
-                        Center(
+                        // Profile Icon
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        // Name and View Account
+                        Expanded(
                           child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: scheme.primary.withOpacity(0.2),
-                                child: Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: scheme.primary,
+                              Text(
+                                _getFullName(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[900],
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              if (_profileData != null)
-                                Text(
-                                  '${_profileData!['firstName'] ?? ''} ${_profileData!['lastName'] ?? ''}'.trim(),
+                              const SizedBox(height: 4),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const ClientPersonalInfoPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  'View account',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Colors.blue[700],
+                                    decoration: TextDecoration.none,
                                   ),
                                 ),
-                              const SizedBox(height: 8),
-                              if (_profileData != null && _profileData!['gender'] != null)
-                                Text(
-                                  _profileData!['gender'].toString(),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 16,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
+                              ),
                             ],
                           ),
                         ),
-
-                        const SizedBox(height: 32),
-
-                        // Profile Information Section
-                        if (_profileData != null) ...[
-                          Text(
-                            'Profile Information',
-                            style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildInfoCard(
-                            icon: Icons.person_outline,
-                            label: 'First Name',
-                            value: _profileData!['firstName']?.toString() ?? 'Not set',
-                          ),
-                          const SizedBox(height: 12),
-                          _buildInfoCard(
-                            icon: Icons.person_outline,
-                            label: 'Last Name',
-                            value: _profileData!['lastName']?.toString() ?? 'Not set',
-                          ),
-                          const SizedBox(height: 12),
-                            if (_profileData!['dateOfBirth'] != null)
-                            _buildInfoCard(
-                              icon: Icons.calendar_today_outlined,
-                              label: 'Date of Birth',
-                              value: _formateDateOfBirth(),
-                            ),
-                          const SizedBox(height: 12),
-                          if (_profileData!['Address'] != null || _profileData!['address'] != null)
-                            _buildInfoCard(
-                              icon: Icons.location_on_outlined,
-                              label: 'Address',
-                              value: _formatAddress(_profileData!['Address'] ?? _profileData!['address']),
-                            ),
-                        ],
-
-                        const SizedBox(height: 32),
-
-                        // Logout Button
-                        SizedBox(
-                          width: double.infinity,
-                          child: OutlinedButton.icon(
-                            onPressed: _handleLogout,
-                            icon: const Icon(Icons.logout, color: Colors.red),
-                            label: Text(
-                              'Logout',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.red,
-                              ),
-                            ),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              side: const BorderSide(color: Colors.red, width: 1.5),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
                       ],
                     ),
                   ),
-                ),
+
+                  // Divider
+                  Divider(height: 1, color: Colors.grey[300]),
+
+                  // List Tiles
+                  _buildListTile(
+                    context,
+                    icon: Icons.person_outline,
+                    title: 'Personal Information',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ClientPersonalInfoPage(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  Divider(height: 1, color: Colors.grey[200]),
+
+                  _buildListTile(
+                    context,
+                    icon: Icons.directions_car,
+                    title: 'Garage',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GaragePage(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  Divider(height: 1, color: Colors.grey[200]),
+
+                  _buildListTile(
+                    context,
+                    icon: Icons.help_outline,
+                    title: 'Help',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ClientHelpPage(),
+                        ),
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Sign Out Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _handleLogout,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Sign Out',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
+              ),
+      ),
     );
   }
 
-  Widget _buildInfoCard({
+  Widget _buildListTile(
+    BuildContext context, {
     required IconData icon,
-    required String label,
-    required String value,
+    required String title,
+    required VoidCallback onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: Colors.grey[700],
+        size: 24,
       ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.grey.shade600),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.grey[900],
+        ),
       ),
+      trailing: Icon(
+        Icons.chevron_right,
+        color: Colors.grey[400],
+        size: 20,
+      ),
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     );
-  }
-
-  String _formatAddress(Map<String, dynamic> address) {
-    final parts = <String>[];
-    // Backend returns PascalCase, but check both cases for compatibility
-    final street = address['Street'] ?? address['street'];
-    if (street != null && street.toString().isNotEmpty) {
-      parts.add(street.toString());
-    }
-    
-    final buildingNumber = address['BuildingNumber'] ?? address['buildingNumber'];
-    if (buildingNumber != null && buildingNumber.toString().isNotEmpty) {
-      parts.add(buildingNumber.toString());
-    }
-    
-    final landmark = address['Landmark'] ?? address['landmark'];
-    if (landmark != null && landmark.toString().isNotEmpty) {
-      parts.add(landmark.toString());
-    }
-    
-    return parts.isEmpty ? 'Not set' : parts.join(', ');
   }
 }

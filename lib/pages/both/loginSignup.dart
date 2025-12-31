@@ -102,7 +102,7 @@ class _LoginClientState extends ConsumerState<LoginClient> {
     final route = role == Role.provider
         ? '/provider_main'
         : '/main_page';
-    Navigator.pushReplacementNamed(context, route);
+    Navigator.pushNamedAndRemoveUntil(context, route ,  (route) => false);
   }
 
   Future<void> _handleRegistrationSuccess(AuthResult result) async {

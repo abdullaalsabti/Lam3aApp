@@ -8,10 +8,17 @@ import 'package:lamaa/services/api_service.dart';
 import 'package:lamaa/widgets/error_message.dart';
 import 'package:lamaa/widgets/location_map_card.dart';
 
+// ignore: must_be_immutable
 class AddressBottomSheet extends StatefulWidget {
-  AddressBottomSheet({super.key, required this.onAddressSaved});
+  AddressBottomSheet({
+    super.key, 
+    required this.onAddressSaved,
+    this.initialAddress,
+  });
 
   void Function(Address address) onAddressSaved;
+  final Address? initialAddress;
+  
   @override
   State<AddressBottomSheet> createState() => _AddressBottomSheetState();
 }
@@ -19,12 +26,38 @@ class AddressBottomSheet extends StatefulWidget {
 class _AddressBottomSheetState extends State<AddressBottomSheet> {
   bool loadingLocation = false;
   final formkey = GlobalKey<FormState>();
-  final TextEditingController houseController = TextEditingController();
-  final TextEditingController landmarkController = TextEditingController();
+  late final TextEditingController houseController;
+  late final TextEditingController landmarkController;
   Address? _address;
   final apiService = ApiService();
   final API_KEY = "AIzaSyByCDOzdRCx0cJhxim3I-d8p0wm2--705Q";
   String? errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers
+    houseController = TextEditingController();
+    landmarkController = TextEditingController();
+    
+    // Pre-fill if initial address is provided
+    if (widget.initialAddress != null) {
+      _address = widget.initialAddress;
+      if (_address!.houseNumber != null) {
+        houseController.text = _address!.houseNumber!;
+      }
+      if (_address!.landmark != null) {
+        landmarkController.text = _address!.landmark!;
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    houseController.dispose();
+    landmarkController.dispose();
+    super.dispose();
+  }
 
   String get locationImage {
     final lat = _address!.coordinates?.latitude;
@@ -40,10 +73,7 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
 
   void onPressed() {
     // Validate that coordinates are present (user must use "get current location")
-    if (_address == null ||
-        _address!.coordinates == null ||
-        _address!.coordinates!.latitude == null ||
-        _address!.coordinates!.longitude == null) {
+    if (_address == null ||_address!.coordinates == null) {
       setState(() {
         errorMessage = 'please put your location first';
       });
@@ -62,7 +92,6 @@ class _AddressBottomSheetState extends State<AddressBottomSheet> {
 
       _address!.houseNumber = houseNumber;
       _address!.landmark = landmark;
-      print(_address!.address == null ? "address is null" : _address!.address);
 
       // Return the address via callback and close the bottom sheet
       widget.onAddressSaved(_address!);

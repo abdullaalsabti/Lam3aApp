@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/providers/sign_up_providers.dart';
 import 'package:lamaa/services/api_service.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 
 import '../../widgets/button.dart';
 

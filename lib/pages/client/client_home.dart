@@ -163,151 +163,8 @@ class _ClientHomePageState extends ConsumerState<ClientHomePage> {
   }
 }
 
-class _LocationSelector extends StatelessWidget {
-  final String address;
 
-  const _LocationSelector({required this.address});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // TODO: Implement location selection/editing
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Location editing coming soon!')),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.location_on, color: Colors.blue, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                address.isEmpty ? 'Select location' : address,
-                style: GoogleFonts.poppins(fontSize: 14),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const Icon(Icons.arrow_drop_down, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _VehicleSelector extends StatelessWidget {
-  final List<Vehicle> vehicles;
-  final Vehicle? selectedVehicle;
-  final Function(Vehicle) onVehicleSelected;
-
-  const _VehicleSelector({
-    required this.vehicles,
-    required this.selectedVehicle,
-    required this.onVehicleSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (vehicles.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.directions_car, color: Colors.grey, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'No vehicles',
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () {
-        showModalBottomSheet(
-          context: context,
-          builder: (context) => Container(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Select Vehicle',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ...vehicles.map((vehicle) => ListTile(
-                      leading: const Icon(Icons.directions_car),
-                      title: Text('${vehicle.brand} ${vehicle.model}'),
-                      subtitle: Text(vehicle.plateNumber),
-                      onTap: () {
-                        onVehicleSelected(vehicle);
-                        Navigator.pop(context);
-                      },
-                    )),
-              ],
-            ),
-          ),
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.directions_car, color: Colors.blue, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    selectedVehicle != null
-                        ? '${selectedVehicle!.brand} ${selectedVehicle!.model}'
-                        : 'Select vehicle',
-                    style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (selectedVehicle != null)
-                    Text(
-                      selectedVehicle!.plateNumber,
-                      style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
-                    ),
-                ],
-              ),
-            ),
-            const Icon(Icons.arrow_drop_down, color: Colors.grey),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
+// ignore: must_be_immutable
 class _Lam3aPointsBanner extends StatelessWidget {
   _Lam3aPointsBanner({required this.scheme});
 
@@ -351,6 +208,7 @@ class _Lam3aPointsBanner extends StatelessWidget {
   }
 }
 
+// ignore: must_be_immutable
 class _ServiceCard extends StatelessWidget {
   final ServiceCategory service;
 

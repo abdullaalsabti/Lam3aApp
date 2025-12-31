@@ -10,6 +10,13 @@ class SignUpNotifier extends StateNotifier<SignUpData> {
     state = state.copyWith(email: email);
   }
 
+  void updateFname(String name) {
+    state = state.copyWith(fName: name);
+  }
+  void updasteSecondName(String name) {
+    state = state.copyWith(lName: name);
+  }
+
   void updatePassword(String password) {
     state = state.copyWith(password: password);
   }

@@ -1,4 +1,7 @@
 enum ServiceStatus {
+  pending,
+  accepted,
+  rejected,
   orderPlaced,
   providerOnTheWay,
   providerArrived,
@@ -8,7 +11,18 @@ enum ServiceStatus {
   cancelled;
 
   static ServiceStatus fromString(String value) {
-    switch (value.toLowerCase()) {
+    final normalized = value
+        .replaceAll('_', '')
+        .replaceAll(' ', '')
+        .toLowerCase();
+
+    switch (normalized) {
+      case 'pending':
+        return ServiceStatus.pending;
+      case 'accepted':
+        return ServiceStatus.accepted;
+      case 'rejected':
+        return ServiceStatus.rejected;
       case 'orderplaced':
         return ServiceStatus.orderPlaced;
       case 'providerontheway':
@@ -24,12 +38,19 @@ enum ServiceStatus {
       case 'cancelled':
         return ServiceStatus.cancelled;
       default:
-        return ServiceStatus.orderPlaced;
+        return ServiceStatus.pending;
     }
   }
 
+  /// For UI display
   String toDisplayString() {
     switch (this) {
+      case ServiceStatus.pending:
+        return 'Pending';
+      case ServiceStatus.accepted:
+        return 'Accepted';
+      case ServiceStatus.rejected:
+        return 'Rejected';
       case ServiceStatus.orderPlaced:
         return 'Order Placed';
       case ServiceStatus.providerOnTheWay:
@@ -46,8 +67,13 @@ enum ServiceStatus {
         return 'Cancelled';
     }
   }
+
+  /// For sending back to backend (converts to PascalCase to match C# enum)
+  String toApiString() {
+    // Convert camelCase to PascalCase
+    if (name.isEmpty) return name;
+    return name[0].toUpperCase() + name.substring(1);
+  }
 }
-
-
 
 

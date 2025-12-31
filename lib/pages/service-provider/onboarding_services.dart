@@ -170,7 +170,6 @@ class _OnBoardingServicesState extends ConsumerState<OnBoardingServices> {
 
   @override
   Widget build(BuildContext context) {
-    final signupState = ref.watch(signupProvider);
     final theme = Theme.of(context);
     Widget content;
     if (loadingCategories == false) {

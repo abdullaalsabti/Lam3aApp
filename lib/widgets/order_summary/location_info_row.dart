@@ -77,3 +77,5 @@ class LocationInfoRow extends StatelessWidget {
   }
 }
 
+
+

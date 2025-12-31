@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lamaa/models/vehicle.dart';
-import 'package:lamaa/pages/client/client_home.dart';
 import 'package:lamaa/providers/client_home_provider.dart';
 import 'package:lamaa/providers/vehicles_provider.dart';
 import 'package:lamaa/providers/brands_provider.dart';
@@ -101,7 +100,7 @@ class GaragePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        // automaticallyImplyLeading: false,
         centerTitle: true,
         title: Text(
           "My Garage",

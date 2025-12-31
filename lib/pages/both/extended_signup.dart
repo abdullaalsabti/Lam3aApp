@@ -12,7 +12,9 @@ import 'package:lamaa/services/api_service.dart';
 import '../../widgets/button.dart';
 
 class ExtendedSignup extends ConsumerStatefulWidget {
-  const ExtendedSignup({super.key});
+  final Map<String, dynamic>? profileData;
+  
+  const ExtendedSignup({super.key, this.profileData});
 
   @override
   ConsumerState<ExtendedSignup> createState() => _ExtendedSignupState();
@@ -31,6 +33,85 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
   Address? selectedAddress;
 
   @override
+  void initState() {
+    super.initState();
+    // Pre-fill form if profile data is provided
+    // Use addPostFrameCallback to avoid modifying providers during build
+    if (widget.profileData != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _loadProfileData();
+        }
+      });
+    }
+  }
+
+  void _loadProfileData() {
+    final profileData = widget.profileData!;
+    
+    // Pre-fill first name
+    if (profileData['firstName'] != null) {
+      fNameController.text = profileData['firstName'].toString();
+    }
+    
+    // Pre-fill last name
+    if (profileData['lastName'] != null) {
+      lNameController.text = profileData['lastName'].toString();
+    }
+    
+    // Pre-fill date of birth
+    if (profileData['dateOfBirth'] != null) {
+      try {
+        final dobString = profileData['dateOfBirth'].toString();
+        selectedDate = DateTime.parse(dobString);
+        dobController.text = DateFormat('dd/MM/yyyy').format(selectedDate!);
+      } catch (e) {
+        // If parsing fails, leave empty
+      }
+    }
+    
+    // Pre-fill gender (this modifies provider, so it's done after build)
+    if (profileData['gender'] != null) {
+      final genderString = profileData['gender'].toString().toLowerCase();
+      Gender? gender;
+      if (genderString == 'male') {
+        gender = Gender.male;
+      } else if (genderString == 'female') {
+        gender = Gender.female;
+      }
+      if (gender != null) {
+        ref.read(signupProvider.notifier).updateGender(gender);
+      }
+    }
+    
+    // Pre-fill address
+    final addressData = profileData['Address'] ?? profileData['address'];
+    if (addressData != null && addressData is Map<String, dynamic>) {
+      try {
+        selectedAddress = Address.fromJson(addressData);
+        
+        // Update address display text
+        final parts = <String>[];
+        if (selectedAddress!.streetName != null && selectedAddress!.streetName!.isNotEmpty) {
+          parts.add(selectedAddress!.streetName!);
+        }
+        if (selectedAddress!.houseNumber != null) {
+          parts.add(selectedAddress!.houseNumber.toString());
+        }
+        if (selectedAddress!.landmark != null && selectedAddress!.landmark!.isNotEmpty) {
+          parts.add(selectedAddress!.landmark!);
+        }
+        addressController.text = parts.join(', ');
+      } catch (e) {
+        // If parsing fails, leave empty
+      }
+    }
+    
+    // Trigger rebuild to reflect the pre-filled data
+    setState(() {});
+  }
+
+  @override
   void dispose() {
     fNameController.dispose();
     lNameController.dispose();
@@ -45,6 +126,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
       isScrollControlled: true,
       builder: (ctx) {
         return AddressBottomSheet(
+          initialAddress: selectedAddress,
           onAddressSaved: (Address address) {
             setState(() {
               selectedAddress = address;
@@ -162,13 +244,26 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile saved successfully!')),
           );
-          userData.role == Role.provider
-              ? Navigator.pushReplacementNamed(context, '/provider_services')
-              : Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  "/garage",
-                  (route) => false, // removes Signup & ExtendedSignup
-                );
+          
+          // If profileData is provided, it means we're in edit mode (from profile page)
+          // Otherwise, we're in signup flow
+          if (widget.profileData != null) {
+            // Edit mode: go back to profile page
+            Navigator.pop(context);
+          } else {
+            // Signup flow: navigate based on role
+            if (userData.role == Role.provider) {
+              // Provider: go to services page
+              Navigator.pushReplacementNamed(context, '/provider_services');
+            } else {
+              // Client: go to garage page
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                "/garage",
+                (route) => false, // removes Signup & ExtendedSignup
+              );
+            }
+          }
         }
       } else {
         String errorMessage = 'Failed to save profile';
@@ -297,7 +392,7 @@ class _ExtendedSignupState extends ConsumerState<ExtendedSignup> {
                         ),
                         const SizedBox(height: 5),
                         DropdownButtonFormField<Gender>(
-                          initialValue: signupState.gender,
+                          value: signupState.gender,
                           decoration: InputDecoration(
                             contentPadding: const EdgeInsets.symmetric(
                               vertical: 15,

@@ -86,7 +86,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
 
     try {
-      final response = await apiService.getAuthenticated('provider/ProviderProfile/getProfile');
+      final response = await apiService.getAuthenticated('provider/ProviderProfile/profile');
       
       if (response.statusCode == 200) {
         // User is a provider
@@ -97,6 +97,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           Navigator.pushReplacementNamed(context, '/provider_main');
         }
         return;
+      }else{
+        debugPrint("failed request ${response.statusCode}");
       }
     } catch (e) {
       debugPrint('Error getting provider profile: $e');

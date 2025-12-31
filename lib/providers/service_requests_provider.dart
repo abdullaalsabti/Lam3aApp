@@ -5,7 +5,7 @@ import '../enums/service_status.dart';
 import '../services/api_service.dart';
 
 // Provider to fetch and cache service requests from backend
-final serviceRequestsProvider = FutureProvider.family<List<ServiceRequest>, ServiceStatus?>((ref, status) async {
+final serviceRequestsProvider = FutureProvider.family<List<ProviderServiceRequest>, ServiceStatus?>((ref, status) async {
   try {
     String endpoint = 'client/ServiceRequest/getRequests';
     if (status != null) {
@@ -16,7 +16,7 @@ final serviceRequestsProvider = FutureProvider.family<List<ServiceRequest>, Serv
     
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((r) => ServiceRequest.fromJson(r)).toList();
+      return data.map((r) => ProviderServiceRequest.fromJson(r)).toList();
     } else {
       print('Failed to load service requests: Status ${response.statusCode}');
       throw Exception('Failed to load service requests: ${response.statusCode}');
@@ -34,6 +34,8 @@ final serviceRequestsRefreshProvider = Provider((ref) {
     ref.invalidate(serviceRequestsProvider);
   };
 });
+
+
 
 
 

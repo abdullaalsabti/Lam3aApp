@@ -57,247 +57,72 @@ ClientServiceRequest(
 ''';
   }
 }
-
-class ServiceRequest {
-  final String id;
+//  {
+//         "requestId": "e1cda93f-5d69-4565-907a-356508dd1835",
+//         "clientName": " ",
+//         "vehiclePlateNumber": "1235",
+//         "serviceName": "Dry Clean",
+//         "price": 50.0,
+//         "status": "Pending",
+//         "scheduledStartTime": "2026-01-14T13:59:00Z",
+//         "scheduledEndTime": "2026-01-14T14:59:00Z",
+//         "serviceLocation": {
+//             "street": "Uqbah Ben Al-Hajjaj Street",
+//             "buildingNumber": "5",
+//             "landmark": "",
+//             "coordinates": {
+//                 "latitude": 31.9825441,
+//                 "longitude": 35.8494211
+//             }
+//         }
+//     },
+class ProviderServiceRequest {
+  final String requestId;
+  final String clientName;
   final String vehiclePlateNumber;
-  final DateTime requestedDateTime;
-  final PaymentMethod paymentMethod;
+  final DateTime scheduledStartTime;
+  final DateTime scheduledEndTime;
   final ServiceStatus status;
-  final String serviceProviderId;
-  final String serviceId;
-  final ServiceCategory? category;
-  final ProviderInfo? provider;
-  final VehicleInfo? vehicle;
-  final AddressInfo? address;
-  final ServiceInfo? service;
-
-  ServiceRequest({
-    required this.id,
-    required this.vehiclePlateNumber,
-    required this.requestedDateTime,
-    required this.paymentMethod,
-    required this.status,
-    required this.serviceProviderId,
-    required this.serviceId,
-    this.category,
-    this.provider,
-    this.vehicle,
-    this.address,
-    this.service,
-  });
-
-  factory ServiceRequest.fromJson(Map<String, dynamic> json) {
-    return ServiceRequest(
-      id: json['Id']?.toString() ?? json['id']?.toString() ?? '',
-      vehiclePlateNumber:
-          json['VehiclePlateNumber'] ?? json['vehiclePlateNumber'] ?? '',
-      requestedDateTime: DateTime.parse(
-        json['RequestedDateTime'] ??
-            json['requestedDateTime'] ??
-            DateTime.now().toIso8601String(),
-      ),
-      paymentMethod: PaymentMethod.fromString(
-        json['PaymentMethod']?.toString() ??
-            json['paymentMethod']?.toString() ??
-            'Cash',
-      ),
-      status: ServiceStatus.fromString(
-        json['Status']?.toString() ??
-            json['status']?.toString() ??
-            'OrderPlaced',
-      ),
-      serviceProviderId:
-          json['ServiceProviderId']?.toString() ??
-          json['serviceProviderId']?.toString() ??
-          '',
-      serviceId:
-          json['ServiceId']?.toString() ?? json['serviceId']?.toString() ?? '',
-      category: json['Category'] != null
-          ? ServiceCategory.fromJson(json['Category'])
-          : json['category'] != null
-          ? ServiceCategory.fromJson(json['category'])
-          : null,
-      provider: json['Provider'] != null
-          ? ProviderInfo.fromJson(json['Provider'])
-          : json['provider'] != null
-          ? ProviderInfo.fromJson(json['provider'])
-          : null,
-      vehicle: json['Vehicle'] != null
-          ? VehicleInfo.fromJson(json['Vehicle'])
-          : json['vehicle'] != null
-          ? VehicleInfo.fromJson(json['vehicle'])
-          : null,
-      address: json['Address'] != null
-          ? AddressInfo.fromJson(json['Address'])
-          : json['address'] != null
-          ? AddressInfo.fromJson(json['address'])
-          : null,
-      service: json['Service'] != null
-          ? ServiceInfo.fromJson(json['Service'])
-          : json['service'] != null
-          ? ServiceInfo.fromJson(json['service'])
-          : null,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'vehiclePlateNumber': vehiclePlateNumber,
-      'requestedDateTime': requestedDateTime!.toIso8601String(),
-      'paymentMethod': paymentMethod!.name,
-      'status': status!.name,
-      'serviceProviderId': serviceProviderId,
-      'serviceId': serviceId,
-      'category': category?.toJson(),
-      'provider': provider?.toJson(),
-      'vehicle': vehicle?.toJson(),
-      'address': address?.toJson(),
-      'service': service?.toJson(),
-    };
-  }
-}
-
-class ProviderInfo {
-  final String userId;
-  final String firstName;
-  final String lastName;
-  final String phone;
-  final double rating;
-
-  ProviderInfo({
-    required this.userId,
-    required this.firstName,
-    required this.lastName,
-    required this.phone,
-    required this.rating,
-  });
-
-  factory ProviderInfo.fromJson(Map<String, dynamic> json) {
-    return ProviderInfo(
-      userId: json['UserId']?.toString() ?? json['userId']?.toString() ?? '',
-      firstName: json['FirstName'] ?? json['firstName'] ?? '',
-      lastName: json['LastName'] ?? json['lastName'] ?? '',
-      phone: json['Phone'] ?? json['phone'] ?? '',
-      rating: (json['Rating'] ?? json['rating'] ?? 0).toDouble(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'userId': userId,
-      'firstName': firstName,
-      'lastName': lastName,
-      'phone': phone,
-      'rating': rating,
-    };
-  }
-}
-
-class VehicleInfo {
-  final String plateNumber;
-  final String brand;
-  final String model;
-  final String color;
-  final String carType;
-
-  VehicleInfo({
-    required this.plateNumber,
-    required this.brand,
-    required this.model,
-    required this.color,
-    required this.carType,
-  });
-
-  factory VehicleInfo.fromJson(Map<String, dynamic> json) {
-    return VehicleInfo(
-      plateNumber: json['PlateNumber'] ?? json['plateNumber'] ?? '',
-      brand: json['Brand'] ?? json['brand'] ?? '',
-      model: json['Model'] ?? json['model'] ?? '',
-      color: json['Color']?.toString() ?? json['color']?.toString() ?? '',
-      carType: json['CarType']?.toString() ?? json['carType']?.toString() ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'plateNumber': plateNumber,
-      'brand': brand,
-      'model': model,
-      'color': color,
-      'carType': carType,
-    };
-  }
-}
-
-class AddressInfo {
-  final String street;
-  final String buildingNumber;
-  final String landmark;
-  final Coordinates coordinates;
-
-  AddressInfo({
-    required this.street,
-    required this.buildingNumber,
-    required this.landmark,
-    required this.coordinates,
-  });
-
-  // Convenience getters for backward compatibility
-  double get latitude => coordinates.latitude;
-  double get longitude => coordinates.longitude;
-
-  factory AddressInfo.fromJson(Map<String, dynamic> json) {
-    return AddressInfo(
-      street: json['Street'] ?? json['street'] ?? '',
-      buildingNumber: json['BuildingNumber'] ?? json['buildingNumber'] ?? '',
-      landmark: json['Landmark'] ?? json['landmark'] ?? '',
-      coordinates: Coordinates.fromJson(json['Coordinates'] ?? json['coordinates'] ?? {
-        'Latitude': json['Latitude'] ?? json['latitude'] ?? 0,
-        'Longitude': json['Longitude'] ?? json['longitude'] ?? 0,
-      }),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'street': street,
-      'buildingNumber': buildingNumber,
-      'landmark': landmark,
-      'Coordinates': coordinates.toJson(),
-    };
-  }
-}
-
-class ServiceInfo {
-  final String id;
   final double price;
-  final String description;
-  final int estimatedTime;
+  final String serviceName;
+  final Address address;
 
-  ServiceInfo({
-    required this.id,
+    ProviderServiceRequest({
+    required this.requestId,
+    required this.clientName,
+    required this.vehiclePlateNumber,
+    required this.serviceName,
+    required this.scheduledStartTime,
+    required this.scheduledEndTime,
+    required this.status,
+    required this.address,
     required this.price,
-    required this.description,
-    required this.estimatedTime,
   });
+factory ProviderServiceRequest.fromJson(Map<String, dynamic> json) {
+  return ProviderServiceRequest(
+    requestId: json['requestId'] as String,
+    clientName: json['clientName'] as String? ?? '',
+    vehiclePlateNumber: json['vehiclePlateNumber'] as String,
+    serviceName: json['serviceName'] as String,
+    price: (json['price'] as num).toDouble(),
+    status: ServiceStatus.fromString(json['status']),
+    scheduledStartTime: DateTime.parse(json['scheduledStartTime']),
+    scheduledEndTime: DateTime.parse(json['scheduledEndTime']),
+    address: Address.fromJson(json['serviceLocation']),
+  );
+}
 
-  factory ServiceInfo.fromJson(Map<String, dynamic> json) {
-    return ServiceInfo(
-      id: json['Id']?.toString() ?? json['id']?.toString() ?? '',
-      price: (json['Price'] ?? json['price'] ?? 0).toDouble(),
-      description: json['Description'] ?? json['description'] ?? '',
-      estimatedTime: json['EstimatedTime'] ?? json['estimatedTime'] ?? 0,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'price': price,
-      'description': description,
-      'estimatedTime': estimatedTime,
-    };
-  }
+Map<String, dynamic> toJson() {
+  return {
+    'requestId': requestId,
+    'clientName': clientName,
+    'vehiclePlateNumber': vehiclePlateNumber,
+    'serviceName': serviceName,
+    'price': price,
+    'status': status.toApiString(),
+    'scheduledStartTime': scheduledStartTime.toUtc().toIso8601String(),
+    'scheduledEndTime': scheduledEndTime.toUtc().toIso8601String(),
+    'serviceLocation': address.toJson(),
+  };
+}
 }

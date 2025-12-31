@@ -16,10 +16,12 @@ final clientHomeProvider = FutureProvider<ClientHomeData>((ref) async {
     } else {
       throw Exception('Failed to load home data: ${response.statusCode}');
     }
-  } catch (e, stackTrace) {
+  } catch (e) {
     throw Exception('Error loading home data: $e');
   }
 });
+
+
 
 
 

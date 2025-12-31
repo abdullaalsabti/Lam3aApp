@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:lamaa/models/provider_service.dart';
-import 'package:lamaa/pages/service-provider/onboarding_services.dart';
+import 'package:lamaa/pages/service-provider/past_requests.dart';
+
 import 'package:lamaa/pages/service-provider/profile_page.dart';
 import 'package:lamaa/pages/service-provider/provider_availability.dart';
 import 'package:lamaa/pages/service-provider/provider_available_requests.dart';
@@ -19,7 +19,7 @@ class _ProviderMainPageState extends State<ProviderMainPage> {
   final List<Widget> _screens = [
     ProviderAvailableRequestsPage(),
     ProviderAvailabilityPage(onBoarding: false,),
-    ProviderServices(), // Logged-in flow - stays on page after adding service
+    PastRequests(), // Logged-in flow - stays on page after adding service
     ProviderProfileScreen()
   ];
 
@@ -47,8 +47,8 @@ class _ProviderMainPageState extends State<ProviderMainPage> {
             label: 'Schedule',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.garage),
-            label: 'Services',
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

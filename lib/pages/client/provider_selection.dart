@@ -1,15 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lamaa/models/service_request.dart';
 import 'package:lamaa/pages/client/service_request_submit.dart';
 import 'package:lamaa/providers/client_serviceRequest_provider.dart';
 import 'dart:convert';
-import '../../models/service_category.dart';
-import '../../models/vehicle.dart';
 import '../../models/provider.dart';
-import '../../enums/payment_method.dart';
 import '../../services/api_service.dart';
 import '../../widgets/provider_widget.dart';
 
@@ -92,7 +87,7 @@ class _ProviderSelectionPageState extends ConsumerState<ProviderSelectionPage> {
           });
         }
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       setState(() {
         _error = 'Error loading providers: ${e.toString()}';
         _isLoading = false;

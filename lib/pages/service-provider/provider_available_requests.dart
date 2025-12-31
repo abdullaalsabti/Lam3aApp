@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
+import 'package:lamaa/providers/sign_up_providers.dart';
+import 'package:lamaa/widgets/provider_request_card.dart';
 import 'dart:convert';
 import '../../models/service_request.dart';
 import '../../services/api_service.dart';
@@ -11,17 +12,25 @@ class ProviderAvailableRequestsPage extends ConsumerStatefulWidget {
   const ProviderAvailableRequestsPage({super.key});
 
   @override
-  ConsumerState<ProviderAvailableRequestsPage> createState() => _ProviderAvailableRequestsPageState();
+  ConsumerState<ProviderAvailableRequestsPage> createState() =>
+      _ProviderAvailableRequestsPageState();
 }
 
-class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailableRequestsPage> {
-  List<ServiceRequest>? _requests;
+class _ProviderAvailableRequestsPageState
+    extends ConsumerState<ProviderAvailableRequestsPage> {
+  final String API_KEY = "AIzaSyByCDOzdRCx0cJhxim3I-d8p0wm2--705Q";
+
+  List<ProviderServiceRequest>? _requests;
   bool _isLoading = true;
   String? _error;
-  
+
   // Availability state
   bool? _availability;
   bool _isLoadingAvailability = false;
+
+  // Track which request is being processed
+  String? _acceptingRequestId;
+  String? _rejectingRequestId;
 
   @override
   void initState() {
@@ -37,8 +46,6 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
     });
 
     try {
-      // Backend uses ProviderOrderController:
-      // GET /api/provider/ProviderOrder/getOrders?status=Pending
       final response = await ApiService().getAuthenticated(
         'provider/ProviderOrder/getOrders?status=Pending',
       );
@@ -46,7 +53,9 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         setState(() {
-          _requests = data.map((r) => ServiceRequest.fromJson(r)).toList();
+          _requests = data
+              .map((r) => ProviderServiceRequest.fromJson(r))
+              .toList();
           _isLoading = false;
         });
       } else {
@@ -57,15 +66,18 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       }
     } catch (e) {
       setState(() {
-        _error = 'Error: $e';
+        _error = 'Error: ${e.toString()}';
         _isLoading = false;
       });
     }
   }
 
   Future<void> _acceptRequest(String requestId) async {
+    setState(() {
+      _acceptingRequestId = requestId;
+    });
+
     try {
-      // Backend: PUT /api/provider/ProviderOrder/{requestId}/accept
       final response = await ApiService().putAuthenticated(
         'provider/ProviderOrder/$requestId/accept',
         {},
@@ -74,36 +86,91 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Request accepted successfully'),
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text('Request accepted successfully'),
+                ],
+              ),
               backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
           );
           _loadRequests();
         }
       } else {
         final errorData = jsonDecode(response.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorData['message'] ?? 'Failed to accept request'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorData['message'] ?? 'Failed to accept request'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _acceptingRequestId = null;
+        });
+      }
     }
   }
 
   Future<void> _rejectRequest(String requestId) async {
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          'Reject Request?',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Are you sure you want to reject this service request?',
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.poppins(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(
+              'Reject',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() {
+      _rejectingRequestId = requestId;
+    });
+
     try {
-      // Backend: PUT /api/provider/ProviderOrder/{requestId}/reject
-      // Body: { reason?: string }
       final response = await ApiService().putAuthenticated(
         'provider/ProviderOrder/$requestId/reject',
         {'reason': null},
@@ -112,29 +179,48 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Request rejected'),
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text('Request rejected'),
+                ],
+              ),
               backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
             ),
           );
           _loadRequests();
         }
       } else {
         final errorData = jsonDecode(response.body);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorData['message'] ?? 'Failed to reject request'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorData['message'] ?? 'Failed to reject request'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _rejectingRequestId = null;
+        });
+      }
     }
   }
 
@@ -162,12 +248,6 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
             _availability = false;
             _isLoadingAvailability = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to load availability status'),
-              backgroundColor: Colors.orange,
-            ),
-          );
         }
       }
     } catch (e) {
@@ -176,12 +256,6 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
           _availability = false;
           _isLoadingAvailability = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error loading availability: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }
@@ -192,12 +266,9 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
     });
 
     try {
-      // ASP.NET Core binds simple types from query string by default
-      final endpoint = 'provider/ProviderProfile/availability?availability=$availability';
-      final response = await ApiService().patchAuthenticated(
-        endpoint,
-        {},
-      );
+      final endpoint =
+          'provider/ProviderProfile/availability?availability=$availability';
+      final response = await ApiService().patchAuthenticated(endpoint, {});
 
       if (response.statusCode == 200) {
         if (mounted) {
@@ -208,11 +279,10 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                availability
-                    ? 'You are now online'
-                    : 'You are now offline',
+                availability ? 'You are now online' : 'You are now offline',
               ),
               backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -230,6 +300,7 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
                     'Failed to update availability',
               ),
               backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -241,8 +312,9 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error updating availability: $e'),
+            content: Text('Error updating availability: ${e.toString()}'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -254,12 +326,14 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         centerTitle: true,
+        elevation: 0,
         title: Text(
           "Available Requests",
           style: GoogleFonts.poppins(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.white,
           ),
@@ -268,6 +342,15 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
       ),
       body: Column(
         children: [
+      //     Row(
+      //       children: [
+      //           Icon(Icons.person, size: 50, color: scheme.primary),
+      //           Text("Hello ${ref.read(signupProvider).fName} ${ref.read(signupProvider).lName}")
+      //       ],
+      //     ),
+        
+
+
           // Availability Slider at the top
           if (_availability != null)
             AvailabilitySlider(
@@ -275,105 +358,127 @@ class _ProviderAvailableRequestsPageState extends ConsumerState<ProviderAvailabl
               isLoading: _isLoadingAvailability,
               onToggle: _updateAvailability,
             ),
+
           // Main content
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(_error!),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadRequests,
-                              child: const Text('Retry'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            scheme.primary,
+                          ),
                         ),
-                      )
-                    : _requests == null || _requests!.isEmpty
-                        ? Center(
-                            child: Text(
-                              'No available requests',
-                              style: GoogleFonts.poppins(fontSize: 16),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Loading requests...',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : _error != null
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 64,
+                            color: Colors.red[300],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            _error!,
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.grey[700],
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadRequests,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _requests!.length,
-                              itemBuilder: (context, index) {
-                          final request = _requests![index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    request.category?.name ?? 'Service',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (request.vehicle != null)
-                                    Text(
-                                      'Vehicle: ${request.vehicle!.brand} ${request.vehicle!.model} - ${request.vehicle!.plateNumber}',
-                                      style: GoogleFonts.poppins(fontSize: 14),
-                                    ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Date: ${DateFormat('MMM dd, yyyy at HH:mm').format(request.requestedDateTime)}',
-                                    style: GoogleFonts.poppins(fontSize: 14),
-                                  ),
-                                  if (request.address != null)
-                                    Text(
-                                      'Location: ${request.address!.street}',
-                                      style: GoogleFonts.poppins(fontSize: 14),
-                                    ),
-                                  if (request.service != null)
-                                    Text(
-                                      'Price: ${request.service!.price.toStringAsFixed(2)} JOD',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: scheme.primary,
-                                      ),
-                                    ),
-                                  const SizedBox(height: 16),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: OutlinedButton(
-                                          onPressed: () => _rejectRequest(request.id),
-                                          child: const Text('Reject'),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: ElevatedButton(
-                                          onPressed: () => _acceptRequest(request.id),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.green,
-                                          ),
-                                          child: const Text('Accept'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _loadRequests,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: scheme.primary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
                               ),
                             ),
-                          );
-                        },
+                          ),
+                        ],
                       ),
                     ),
+                  )
+                : _requests == null || _requests!.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inbox_outlined,
+                            size: 80,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'No Available Requests',
+                            style: GoogleFonts.poppins(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'New service requests will appear here',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 24),
+                          OutlinedButton.icon(
+                            onPressed: _loadRequests,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Refresh'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadRequests,
+                    color: scheme.primary,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _requests!.length,
+                      itemBuilder: (context, index) {
+                        final request = _requests![index];
+                        return ProviderRequestCard(
+                          req: request,
+                          apiKey: API_KEY,
+                          onAccept: () => _acceptRequest(request.requestId),
+                          onReject: () => _rejectRequest(request.requestId),
+                          isAccepting: _acceptingRequestId == request.requestId,
+                          isRejecting: _rejectingRequestId == request.requestId,
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

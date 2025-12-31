@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// ignore: must_be_immutable
 class ErrorMessage extends StatelessWidget {
   ErrorMessage({super.key, required this.errorMessage});
 
@@ -21,7 +22,7 @@ class ErrorMessage extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              errorMessage!,
+              errorMessage,
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 color: Colors.red.shade700,

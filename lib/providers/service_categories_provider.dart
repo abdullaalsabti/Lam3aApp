@@ -14,10 +14,12 @@ final serviceCategoriesProvider = FutureProvider<List<ServiceCategory>>((ref) as
     } else {
       throw Exception('Failed to load service categories: ${response.statusCode}');
     }
-  } catch (e, stackTrace) {
+  } catch (e) {
     throw Exception('Error loading service categories: $e');
   }
 });
+
+
 
 
 

@@ -80,7 +80,7 @@ class ProviderServices extends ConsumerWidget {
 
   PreferredSizeWidget _buildAppBar(ColorScheme scheme, ThemeData theme) {
     return AppBar(
-      automaticallyImplyLeading: false,
+      // automaticallyImplyLeading: false,
       centerTitle: true,
       backgroundColor: scheme.primary,
       elevation: 0,

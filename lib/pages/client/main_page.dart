@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lamaa/pages/client/Profile.dart';
 import 'package:lamaa/pages/client/client_home.dart';
-import 'package:lamaa/pages/client/garage_page.dart';
+import 'package:lamaa/pages/client/orders.dart';
 import 'package:lamaa/widgets/order_summary/success_confirmation_dialog.dart';
 
 class MainPage extends StatefulWidget {
@@ -17,7 +17,7 @@ class _MainPageState extends State<MainPage> {
 
   final List<Widget> _screens = [
     ClientHomePage(),
-    GaragePage(),
+    const OrdersPage(),
     ProfileScreen(),
   ];
 
@@ -55,27 +55,28 @@ class _MainPageState extends State<MainPage> {
         children: _screens,
       ),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-      
-        items:const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.directions_car),
-          label: 'Garage',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.person),
-          label: 'Profile',
-        ),
-      ],),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long),
+            label: 'Orders',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Profile',
+          ),
+        ],
+      ),
     );
   }
 }
